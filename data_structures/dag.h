@@ -2,11 +2,12 @@
 #define DAG_H
 
 #include "node.h"
-#include <vector>
+#include <list>
 
 /**
- * @brief The Dag class
- * I sotre the DAG in a vector, less code & same speed of a list (no deletions)
+ * @brief The DAG data structure
+ *
+ * In this second version I sotre the nodes of the DAG in a list. I've abandoned (unfortunately:-) the first "vector" version!
  */
 class Dag {
 
@@ -15,8 +16,10 @@ public:
     ~Dag();
     void clear();
 
+    Node * addNode(Node node);
+
 private:
-    std::vector<Node> nodes;
+    std::list<Node> nodes;
 
 };
 

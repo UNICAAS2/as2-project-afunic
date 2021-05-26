@@ -43,6 +43,7 @@ SOURCES +=  \
     data_structures/dag.cpp \
     data_structures/node.cpp \
     data_structures/segment_intersection_checker.cpp \
+    data_structures/trapezoid.cpp \
     data_structures/trapezoidalmap_dataset.cpp \
     drawables/drawable_trapezoidalmap_dataset.cpp \
     main.cpp \
@@ -56,6 +57,7 @@ HEADERS += \
     data_structures/dag.h \
     data_structures/node.h \
     data_structures/segment_intersection_checker.h \
+    data_structures/trapezoid.h \
     data_structures/trapezoidalmap_dataset.h \
     drawables/drawable_trapezoidalmap_dataset.h \
     managers/trapezoidalmap_manager.h \

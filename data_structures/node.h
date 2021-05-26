@@ -2,28 +2,31 @@
 #define NODE_H
 
 #include <cstddef>
+#include <iostream>
 
 /**
- * @brief The Node class
- * Minimal version, I only store a "value" that represents an index of a vector. The vector depends on the type of
- * node (XNODE, YNODE, LEAF). The responsibility and integrity of indices are handled at a higher level (e.g. DAG or algorithm).
+ * @brief Class representing the node of a graph with max 2 childs
+ *
+ * Minimal (second) version, I only store a "value" that represents a generic pointer to a point (if XNODE), a segment (if YNODE)
+ * or a trapezoid (if "type" is LEAF).
  */
 class Node {
 
 public:
     enum NodeType {XNODE, YNODE, LEAF};
-    Node(NodeType node_type, size_t element_id);
+    Node(NodeType node_type, void * node_value);
 
-    void setLeftChild(size_t lc);
-    void setRightChild(size_t rc);
-    size_t getLeftChild();
-    size_t getRightChild();
+    void setLeftChild(Node * lc);
+    void setRightChild(Node * rc);
+    Node * getLeftChild();
+    Node * getRightChild();
+    NodeType getType();
 
 private:
     NodeType type;
-    size_t value;       // this is an index in the vector points, segments or trapezoid
-    size_t leftChild;   // this is an index of the vector nodes of the DAG
-    size_t rightChild;  //           //                  //
+    void * value;       // a generic pointer to a point (if XNODE), a segment (if YNODE) * or a trapezoid (if "type" is LEAF)
+    Node * leftChild;   // pointer to the left child
+    Node * rightChild;  // pointer to the right child
 };
 
 #endif // NODE_H
