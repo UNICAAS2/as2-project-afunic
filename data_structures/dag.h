@@ -2,12 +2,13 @@
 #define DAG_H
 
 #include "node.h"
-#include <list>
+#include <vector>
 
 /**
  * @brief The DAG data structure
  *
- * In this second version I sotre the nodes of the DAG in a list. I've abandoned (unfortunately:-) the first "vector" version!
+ * Third version !!!! I have (again) replaced the list with a vector. In the DAG there are no deletions but only additions, the
+ * trapezpid/leaf is alwys replaced by a subgraph...
  */
 class Dag {
 
@@ -16,10 +17,10 @@ public:
     ~Dag();
     void clear();
 
-    Node * addNode(Node node);
+    size_t addNode(Node node);
 
 private:
-    std::list<Node> nodes;
+    std::vector<Node> nodes;
 
 };
 

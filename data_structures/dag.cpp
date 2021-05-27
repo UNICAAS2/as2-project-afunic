@@ -5,7 +5,7 @@ Dag::Dag() {
 }
 
 /**
- * @brief Dag::~Dag delete nodes of the graph
+ * @brief Dag::~Dag delete all nodes of the graph
  */
 Dag::~Dag() {
     clear();
@@ -20,9 +20,10 @@ void Dag::clear() {
 
 /**
  * @brief Dag::addNode add a node in the DAG
- * @return the direct reference to the new node
+ * @param node the node
+ * @return the index of the new node
  */
-Node * Dag::addNode(Node node) {
+size_t Dag::addNode(Node node) {
     nodes.push_back(node);
-    return &nodes.back();
+    return nodes.size()-1;
 }

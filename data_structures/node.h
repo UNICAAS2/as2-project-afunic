@@ -7,26 +7,27 @@
 /**
  * @brief Class representing the node of a graph with max 2 childs
  *
- * Minimal (second) version, I only store a "value" that represents a generic pointer to a point (if XNODE), a segment (if YNODE)
- * or a trapezoid (if "type" is LEAF).
+ * Minimal (third) version. I only store a "value" that represents an index to a vector of points (if XNODE), segments (if YNODE)
+ * or trapezoids (if "type" is LEAF). In general, this "value" can be used for any data structure in  which the elements are
+ * uniquely identified by a size_t index.
  */
 class Node {
 
 public:
     enum NodeType {XNODE, YNODE, LEAF};
-    Node(NodeType node_type, void * node_value);
+    Node(NodeType node_type, size_t node_value);
 
-    void setLeftChild(Node * lc);
-    void setRightChild(Node * rc);
-    Node * getLeftChild();
-    Node * getRightChild();
+    void setLeftChild(size_t lc);
+    void setRightChild(size_t rc);
+    size_t getLeftChild();
+    size_t getRightChild();
     NodeType getType();
 
 private:
     NodeType type;
-    void * value;       // a generic pointer to a point (if XNODE), a segment (if YNODE) * or a trapezoid (if "type" is LEAF)
-    Node * leftChild;   // pointer to the left child
-    Node * rightChild;  // pointer to the right child
+    size_t value;       // an index to a point (if XNODE), a segment (if YNODE) or a trapezoid (if "type" is LEAF)
+    size_t leftChild;   // index of the left child
+    size_t rightChild;  // index of the right child
 };
 
 #endif // NODE_H
