@@ -11,21 +11,23 @@
 class Trapezoid {
 
 public:
-    Trapezoid(cg3::Point2d leftP, cg3::Segment2d top, cg3::Point2d rightP, cg3::Segment2d bottom);
-    void setNeighbors(size_t tl, size_t tr, size_t br, size_t bl);
+    Trapezoid(cg3::Point2d left, cg3::Segment2d top, cg3::Point2d right, cg3::Segment2d bottom);
+    void setNeighbors(size_t top_left, size_t top_right, size_t bottom_right, size_t bottom_left);
+    void computeVertices(std::array<cg3::Point2d, 4>& vertices);
 
 private:
-    cg3::Point2d _leftP;
-    cg3::Segment2d _top;
-    cg3::Point2d _rightP;
-    cg3::Segment2d _bottom;
+    double getIntersectionYCoord(double xSlab, cg3::Segment2d segment);
+    cg3::Point2d left_point;
+    cg3::Segment2d top_segment;
+    cg3::Point2d right_point;
+    cg3::Segment2d bottom_segment;
 
-    size_t _tln; // Adjacents trapezoids, to left neighbor
-    size_t _trn; // top right
-    size_t _brn; // bottom right
-    size_t _bln; // bottom left
+    size_t top_left_neighbor; // Adjacents trapezoids
+    size_t top_right_neighbor;
+    size_t bottom_right_neighbor;
+    size_t bottom_left_neighbor;
 
-    size_t _node;
+    size_t leaf_node_id; //punta al nodo foglia del dag
 };
 
 #endif // TRAPEZOID_H

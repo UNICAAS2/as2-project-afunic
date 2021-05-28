@@ -17,8 +17,8 @@ public:
     enum NodeType {XNODE, YNODE, LEAF};
     Node(NodeType node_type, size_t node_value);
 
-    void setLeftChild(size_t lc);
-    void setRightChild(size_t rc);
+    void setLeftChild(size_t left_child);
+    void setRightChild(size_t right_child);
     size_t getLeftChild();
     size_t getRightChild();
     NodeType getType();
@@ -26,8 +26,8 @@ public:
 private:
     NodeType type;
     size_t value;       // an index to a point (if XNODE), a segment (if YNODE) or a trapezoid (if "type" is LEAF)
-    size_t leftChild;   // index of the left child
-    size_t rightChild;  // index of the right child
+    size_t left_child_index;   // index of the left child
+    size_t right_child_index;  // index of the right child
 };
 
 #endif // NODE_H

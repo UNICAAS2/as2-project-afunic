@@ -8,7 +8,7 @@
  * @brief The DAG data structure
  *
  * Third version !!!! I have (again) replaced the list with a vector. In the DAG there are no deletions but only additions, the
- * trapezpid/leaf is alwys replaced by a subgraph...
+ * trapezoid/leaf is always replaced by a subgraph...
  */
 class Dag {
 
