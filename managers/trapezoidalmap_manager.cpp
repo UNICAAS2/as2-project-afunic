@@ -11,6 +11,8 @@
 
 #include "utils/fileutils.h"
 
+#include "algorithms/algorithms.h"
+
 //Limits for the bounding box
 //It defines where points can be added
 //Do not change the following line
@@ -82,6 +84,7 @@ TrapezoidalMapManager::TrapezoidalMapManager(QWidget *parent) :
     //the dataset.
 
 
+    mainWindow.pushDrawableObject(&drawableTrapezoidalMap);
 
 
     //#####################################################################
@@ -121,6 +124,7 @@ TrapezoidalMapManager::~TrapezoidalMapManager()
     //be evaluated!)
 
 
+    mainWindow.deleteDrawableObject(&drawableTrapezoidalMap);
 
 
     //#####################################################################
@@ -195,6 +199,7 @@ void TrapezoidalMapManager::addSegmentToTrapezoidalMap(const cg3::Segment2d& seg
     //structures, you could save directly the point (Point2d) in each trapezoid (it is fine).
 
 
+    Algorithms::addSegmentToTrapezoidalMap(drawableTrapezoidalMap, dag, segment);
 
 
     //#####################################################################
@@ -203,7 +208,7 @@ void TrapezoidalMapManager::addSegmentToTrapezoidalMap(const cg3::Segment2d& seg
 
     //You can delete this line after you implement the algorithm: it is
     //just needed to suppress the unused-variable warning
-    CG3_SUPPRESS_WARNING(segment);
+    //CG3_SUPPRESS_WARNING(segment);
 }
 
 /**
@@ -271,6 +276,9 @@ void TrapezoidalMapManager::clearTrapezoidalMap()
     //---------------------------------------------------------------------
     //Clear here your trapezoidal map data structure.
 
+
+    drawableTrapezoidalMap.clear();
+    dag.clear();
 
 
     //#####################################################################

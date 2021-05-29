@@ -7,7 +7,7 @@
 /**
  * @brief Class representing the node of a graph with max 2 childs
  *
- * Minimal (third) version. I only store a "value" that represents an index to a vector of points (if XNODE), segments (if YNODE)
+ * Minimal (third) version. I only store a "value" that represents an index of a vector of points (if XNODE), segments (if YNODE)
  * or trapezoids (if "type" is LEAF). In general, this "value" can be used for any data structure in  which the elements are
  * uniquely identified by a size_t index.
  */
@@ -25,9 +25,9 @@ public:
 
 private:
     NodeType type;
-    size_t value;       // an index to a point (if XNODE), a segment (if YNODE) or a trapezoid (if "type" is LEAF)
-    size_t left_child_index;   // index of the left child
-    size_t right_child_index;  // index of the right child
+    size_t value;       // an index of a point (if XNODE), a segment (if YNODE) or a trapezoid (if "type" is LEAF)
+    size_t left_child_index;
+    size_t right_child_index;
 };
 
 #endif // NODE_H

@@ -16,23 +16,25 @@ void Trapezoid::setNeighbors(size_t top_left, size_t top_right, size_t bottom_ri
 }
 
 /**
- * @brief rapezoid::computeVertices
+ * @brief Trapezoid::getVertices
  * @param
  * @return
  */
-void Trapezoid::computeVertices(std::array<cg3::Point2d, 4>& vertices) {
+const std::array<cg3::Point2d, 4> Trapezoid::getVertices() const {
+    std::array<cg3::Point2d, 4> vertices;
     vertices[0].set(left_point.x(),getIntersectionYCoord(left_point.x(), top_segment));      // top left
     vertices[1].set(right_point.x(),getIntersectionYCoord(right_point.x(), top_segment));    // top right
     vertices[2].set(right_point.x(),getIntersectionYCoord(right_point.x(), bottom_segment)); // bottom right
     vertices[3].set(left_point.x(),getIntersectionYCoord(left_point.x(), bottom_segment));   // bottom left
-}
+    return vertices;
+};
 
 /**
  * @brief rapezoid::getIntersectionYCoord
  * @param
  * @return la y dell'intersezione tra la slap (linea verticale) e il segment
  */
-double Trapezoid::getIntersectionYCoord(double xSlab, cg3::Segment2d segment) {
+double Trapezoid::getIntersectionYCoord(double xSlab, cg3::Segment2d segment) const {
     if (segment.p1().x() != segment.p2().x()) {
         double pdz = (segment.p2().y() - segment.p1().y()) / (segment.p2().x() - segment.p1().x());
         return (pdz*(xSlab - segment.p1().x()) + segment.p1().y());

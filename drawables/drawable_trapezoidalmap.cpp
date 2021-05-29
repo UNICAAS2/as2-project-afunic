@@ -1,19 +1,16 @@
 #include "drawable_trapezoidalmap.h"
 #include <cg3/viewer/opengl_objects/opengl_objects2.h>
 
-DrawableTrapezoidalMap::DrawableTrapezoidalMap() {
+DrawableTrapezoidalMap::DrawableTrapezoidalMap():TrapezoidalMap() {
 
 }
 
 void DrawableTrapezoidalMap::draw() const {
-    std::array<cg3::Point2d, 4> trapverts;
-    TODO iterare i trapezoidi usando computeVertices...
-    for (const Trapezoid& seg : tape) {
-            cg3::opengl::drawLine2(seg.p1(), seg.p2(), segmentColor, static_cast<int>(segmentSize));
+    cg3::Color randCol;
+    for (const Trapezoid& trap : getTrapezoids()) {
+            randCol=(rand(), rand(), rand(),255);
+            cg3::opengl::drawQuad2(trap.getVertices(), randCol, 1, true);
     }
-    /*for (const cg3::Segment2d& seg : getSegments()) {
-        cg3::opengl::drawLine2(seg.p1(), seg.p2(), segmentColor, static_cast<int>(segmentSize));
-    }*/
 }
 
 cg3::Point3d DrawableTrapezoidalMap::sceneCenter() const

@@ -13,10 +13,10 @@ class Trapezoid {
 public:
     Trapezoid(cg3::Point2d left, cg3::Segment2d top, cg3::Point2d right, cg3::Segment2d bottom);
     void setNeighbors(size_t top_left, size_t top_right, size_t bottom_right, size_t bottom_left);
-    void computeVertices(std::array<cg3::Point2d, 4>& vertices);
+    const std::array<cg3::Point2d, 4> getVertices() const;
 
 private:
-    double getIntersectionYCoord(double xSlab, cg3::Segment2d segment);
+    double getIntersectionYCoord(double xSlab, cg3::Segment2d segment) const;
     cg3::Point2d left_point;
     cg3::Segment2d top_segment;
     cg3::Point2d right_point;

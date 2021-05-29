@@ -18,6 +18,8 @@ public:
 
     size_t addTrapezoid(Trapezoid trapezoid);
 
+    const std::vector<Trapezoid>& getTrapezoids() const;
+
 private:
     std::vector<Trapezoid> trapezoids;
 

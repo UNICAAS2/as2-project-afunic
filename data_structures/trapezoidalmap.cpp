@@ -26,3 +26,12 @@ size_t TrapezoidalMap::addTrapezoid(Trapezoid trapezoid) {
     trapezoids.push_back(trapezoid);
     return trapezoids.size()-1;
 }
+
+/**
+ * @brief TrapezoidalMap::getTrapezoids
+ * @return
+ */
+const std::vector<Trapezoid>& TrapezoidalMap::getTrapezoids() const
+{
+    return trapezoids;
+}

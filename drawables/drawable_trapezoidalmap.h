@@ -16,7 +16,6 @@ public:
     double sceneRadius() const;
 
 private:
-    // cg3::BoundingBox2 boundingBox;
 
 };
 
