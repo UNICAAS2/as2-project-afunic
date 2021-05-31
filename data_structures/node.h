@@ -22,6 +22,7 @@ public:
     size_t getLeftChild();
     size_t getRightChild();
     NodeType getType();
+    size_t getValue();
 
 private:
     NodeType type;
@@ -29,5 +30,7 @@ private:
     size_t left_child_index;
     size_t right_child_index;
 };
+
+
 
 #endif // NODE_H

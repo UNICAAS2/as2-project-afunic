@@ -18,6 +18,7 @@ public:
     void clear();
 
     size_t addNode(Node node);
+    inline Node& node(size_t id);
 
 private:
     std::vector<Node> nodes;

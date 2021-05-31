@@ -84,7 +84,7 @@ TrapezoidalMapManager::TrapezoidalMapManager(QWidget *parent) :
     //the dataset.
 
 
-    mainWindow.pushDrawableObject(&drawableTrapezoidalMap);
+    mainWindow.pushDrawableObject(&drawableTrapezoidalMap, "Trapezoids");
 
 
     //#####################################################################

@@ -5,12 +5,12 @@
  * @param node_type the node type (x,y,leaf)
  * @param node_value index to a vector of points (if XNODE), segments (if YNODE) or trapezoids (if "type" is LEAF) or any other vector.
  */
-Node::Node(NodeType node_type, size_t node_value) {
-    type = node_type;
-    value = node_value;
-    left_child_index=SIZE_MAX; // like nullptr, SIZE_MAX => null value
-    right_child_index=SIZE_MAX;
-}
+Node::Node(NodeType node_type, size_t node_value):
+    type(node_type),
+    value(node_value),
+    left_child_index(SIZE_MAX), // like nullptr, SIZE_MAX => null value
+    right_child_index(SIZE_MAX)
+{}
 
 /**
  * @brief Set the left child
@@ -50,4 +50,8 @@ size_t Node::getRightChild() {
  */
 Node::NodeType Node::getType() {
     return type;
+}
+
+size_t Node::getValue() {
+    return value;
 }

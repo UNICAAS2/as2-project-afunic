@@ -16,6 +16,8 @@ TrapezoidalMap::~TrapezoidalMap() {
  */
 void TrapezoidalMap::clear() {
     trapezoids.clear();
+    segments.clear();
+    points.clear();
 }
 
 /**
@@ -27,11 +29,45 @@ size_t TrapezoidalMap::addTrapezoid(Trapezoid trapezoid) {
     return trapezoids.size()-1;
 }
 
+size_t TrapezoidalMap::addSegment(cg3::Segment2d segment) {
+    segments.push_back(segment);
+    return segments.size()-1;
+}
+
+size_t TrapezoidalMap::addPoint(cg3::Point2d point) {
+    points.push_back(point);
+    return points.size()-1;
+}
+
+/**
+ * @brief TrapezoidalMap::getTrapezoidsNumber
+ * @return the number of trapezoids
+ */
+size_t TrapezoidalMap::getTrapezoidsNumber() {
+    return trapezoids.size();
+}
+
 /**
  * @brief TrapezoidalMap::getTrapezoids
  * @return
  */
-const std::vector<Trapezoid>& TrapezoidalMap::getTrapezoids() const
-{
+const std::vector<Trapezoid>& TrapezoidalMap::getTrapezoids() const {
     return trapezoids;
+}
+
+/**
+ * @brief TrapezoidalMap::trapezoid inline: execution should be faster
+ * @param id: an index of a trapezoid
+ * @return the reference for the trapezoid id
+ */
+inline Trapezoid& TrapezoidalMap::trapezoid(size_t id) {
+    return trapezoids[id];
+}
+
+inline cg3::Segment2d& TrapezoidalMap::segment(size_t id){
+    return segments[id];
+}
+
+inline cg3::Point2d& TrapezoidalMap::point(size_t id){
+    return points[id];
 }

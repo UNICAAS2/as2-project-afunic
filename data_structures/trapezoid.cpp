@@ -1,12 +1,12 @@
 #include "trapezoid.h"
 
-Trapezoid::Trapezoid(cg3::Point2d left, cg3::Segment2d top, cg3::Point2d right, cg3::Segment2d bottom) {
-    left_point=left;
-    top_segment=top;
-    right_point=right;
-    bottom_segment=bottom;
-    leaf_node_id=SIZE_MAX; // like nullptr, SIZE_MAX => null value
-}
+Trapezoid::Trapezoid(cg3::Point2d left_p, cg3::Segment2d top_s, cg3::Point2d right_p, cg3::Segment2d bottom_s):
+    left_point(left_p),
+    top_segment(top_s),
+    right_point(right_p),
+    bottom_segment(bottom_s),
+    leaf_node_id(SIZE_MAX)
+{}
 
 void Trapezoid::setNeighbors(size_t top_left, size_t top_right, size_t bottom_right, size_t bottom_left) {
     top_left_neighbor=top_left;

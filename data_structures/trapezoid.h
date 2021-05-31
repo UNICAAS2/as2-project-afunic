@@ -11,7 +11,8 @@
 class Trapezoid {
 
 public:
-    Trapezoid(cg3::Point2d left, cg3::Segment2d top, cg3::Point2d right, cg3::Segment2d bottom);
+    Trapezoid(cg3::Point2d left_p, cg3::Segment2d top_s, cg3::Point2d right_p, cg3::Segment2d bottom_s);
+
     void setNeighbors(size_t top_left, size_t top_right, size_t bottom_right, size_t bottom_left);
     const std::array<cg3::Point2d, 4> getVertices() const;
 

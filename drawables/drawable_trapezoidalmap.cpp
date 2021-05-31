@@ -10,6 +10,7 @@ void DrawableTrapezoidalMap::draw() const {
     for (const Trapezoid& trap : getTrapezoids()) {
             randCol=(rand(), rand(), rand(),255);
             cg3::opengl::drawQuad2(trap.getVertices(), randCol, 1, true);
+            // todo: disegnare i 2 segmenti verticali...
     }
 }
 

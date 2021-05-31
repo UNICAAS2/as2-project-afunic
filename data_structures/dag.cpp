@@ -27,3 +27,12 @@ size_t Dag::addNode(Node node) {
     nodes.push_back(node);
     return nodes.size()-1;
 }
+
+/**
+ * @brief Dag::node inline: execution should be faster
+ * @param id: an index of a node
+ * @return the reference for the node id
+ */
+inline Node& Dag::node(size_t id) {
+    return nodes[id];
+}
