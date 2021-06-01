@@ -19,6 +19,7 @@ public:
     size_t addTrapezoid(Trapezoid trapezoid);
     size_t addSegment(cg3::Segment2d segment);
     size_t addPoint(cg3::Point2d point);
+    void swapAndDeleteTrapezoid(size_t id_to_delete);
     const std::vector<Trapezoid>& getTrapezoids() const;
     size_t getTrapezoidsNumber();
     inline Trapezoid& trapezoid(size_t id);
@@ -27,6 +28,9 @@ public:
 
 private:
     std::vector<Trapezoid> trapezoids;
+
+    // the segments and points vectors are used only for support the DAG, may contain duplicate elements, but space
+    // complexity is the same and I avoid preventing duplicate elements and the consequent time complexity, +space,-time!
     std::vector<cg3::Segment2d> segments;
     std::vector<cg3::Point2d> points;
 

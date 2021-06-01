@@ -6,8 +6,8 @@
 
 namespace Algorithms {
     void addSegmentToTrapezoidalMap(TrapezoidalMap& tmap, Dag& dag, cg3::Segment2d segment);
-    std::vector<size_t> FollowSegment(TrapezoidalMap& tmap, Dag& dag, cg3::Segment2d segment);
-    size_t queryTrapezoidalMap(cg3::Point2d point, TrapezoidalMap& tmap, Dag& dag);
+    std::vector<Node*> FollowSegment(TrapezoidalMap& tmap, Dag& dag, cg3::Segment2d segment);
+    Node* queryTrapezoidalMap(cg3::Point2d point, TrapezoidalMap& tmap, Dag& dag);
 }
 
 #endif // ALGORITHMS_H

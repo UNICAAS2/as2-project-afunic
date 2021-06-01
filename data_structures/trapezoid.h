@@ -14,7 +14,13 @@ public:
     Trapezoid(cg3::Point2d left_p, cg3::Segment2d top_s, cg3::Point2d right_p, cg3::Segment2d bottom_s);
 
     void setNeighbors(size_t top_left, size_t top_right, size_t bottom_right, size_t bottom_left);
+    //void setLeafNode(size_t node_id);
     const std::array<cg3::Point2d, 4> getVertices() const;
+    cg3::Point2d getLeftPoint();
+    cg3::Segment2d getTopSegment();
+    cg3::Point2d getRightPoint();
+    cg3::Segment2d getBottomSegment();
+    //size_t getLeafNode();
 
 private:
     double getIntersectionYCoord(double xSlab, cg3::Segment2d segment) const;
@@ -28,7 +34,7 @@ private:
     size_t bottom_right_neighbor;
     size_t bottom_left_neighbor;
 
-    size_t leaf_node_id; //punta al nodo foglia del dag
+    //size_t leaf_node_id; //punta al nodo foglia del dag
 };
 
 #endif // TRAPEZOID_H

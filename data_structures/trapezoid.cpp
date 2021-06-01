@@ -4,8 +4,8 @@ Trapezoid::Trapezoid(cg3::Point2d left_p, cg3::Segment2d top_s, cg3::Point2d rig
     left_point(left_p),
     top_segment(top_s),
     right_point(right_p),
-    bottom_segment(bottom_s),
-    leaf_node_id(SIZE_MAX)
+    bottom_segment(bottom_s)/*,
+    leaf_node_id(SIZE_MAX)*/
 {}
 
 void Trapezoid::setNeighbors(size_t top_left, size_t top_right, size_t bottom_right, size_t bottom_left) {
@@ -14,6 +14,12 @@ void Trapezoid::setNeighbors(size_t top_left, size_t top_right, size_t bottom_ri
     bottom_right_neighbor=bottom_right;
     bottom_left_neighbor=bottom_left;
 }
+
+/*
+void Trapezoid::setLeafNode(size_t node_id) {
+    leaf_node_id=node_id;
+}
+*/
 
 /**
  * @brief Trapezoid::getVertices
@@ -28,6 +34,28 @@ const std::array<cg3::Point2d, 4> Trapezoid::getVertices() const {
     vertices[3].set(left_point.x(),getIntersectionYCoord(left_point.x(), bottom_segment));   // bottom left
     return vertices;
 };
+
+cg3::Point2d Trapezoid::getLeftPoint() {
+    return left_point;
+}
+
+cg3::Segment2d Trapezoid::getTopSegment(){
+    return top_segment;
+}
+
+cg3::Point2d Trapezoid::getRightPoint(){
+    return right_point;
+}
+
+cg3::Segment2d Trapezoid::getBottomSegment(){
+    return bottom_segment;
+}
+
+/*
+size_t Trapezoid::getLeafNode(){
+    return leaf_node_id;
+}
+*/
 
 /**
  * @brief rapezoid::getIntersectionYCoord

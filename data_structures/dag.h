@@ -2,13 +2,12 @@
 #define DAG_H
 
 #include "node.h"
-#include <vector>
+#include <list>
 
 /**
  * @brief The DAG data structure
  *
- * Third version !!!! I have (again) replaced the list with a vector. In the DAG there are no deletions but only additions, the
- * trapezoid/leaf is always replaced by a subgraph...
+ * I have replaced (again) the vector with a list.
  */
 class Dag {
 
@@ -17,11 +16,13 @@ public:
     ~Dag();
     void clear();
 
-    size_t addNode(Node node);
-    inline Node& node(size_t id);
+    Node* addNode(Node node, bool isRootNode=false);
+    Node* getRootNode();
+    // inline Node& node(size_t id); TOCUT: vector versioni...
 
 private:
-    std::vector<Node> nodes;
+    Node* rootNode;
+    std::list<Node> nodes;
 
 };
 
