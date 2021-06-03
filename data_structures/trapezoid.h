@@ -21,6 +21,10 @@ public:
     cg3::Point2d getRightPoint();
     cg3::Segment2d getBottomSegment();
     //size_t getLeafNode();
+    size_t getTopLeftNeighbor();
+    size_t getTopRightNeighbor();
+    size_t getBottomRightNeighbor();
+    size_t getBottomLeftNeighbor();
 
 private:
     double getIntersectionYCoord(double xSlab, cg3::Segment2d segment) const;

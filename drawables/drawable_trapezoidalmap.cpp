@@ -6,11 +6,17 @@ DrawableTrapezoidalMap::DrawableTrapezoidalMap():TrapezoidalMap() {
 }
 
 void DrawableTrapezoidalMap::draw() const {
-    cg3::Color randCol;
+    //std::array<cg3::Point2d, 4> vertices;
+    size_t i=0;
     for (const Trapezoid& trap : getTrapezoids()) {
-            randCol=(rand(), rand(), rand(),255);
-            cg3::opengl::drawQuad2(trap.getVertices(), randCol, 1, true);
-            // todo: disegnare i 2 segmenti verticali...
+            //vertices=trap.getVertices();
+        if (i!=id_tmp)
+            cg3::opengl::drawQuad2(trap.getVertices(), (cg3::Color(rand()%128,rand()%128,rand()%128)), 1, true);
+            //cg3::opengl::drawLine2(vertices[0], vertices[3], (cg3::Color(0,200,0)), 1);
+            //cg3::opengl::drawLine2(vertices[1], vertices[2], (cg3::Color(0,200,0)), 1);
+        else
+            cg3::opengl::drawQuad2(trap.getVertices(), (cg3::Color(64,255,64)), 1, true);
+        i++;
     }
 }
 

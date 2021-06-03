@@ -22,9 +22,11 @@ public:
     void swapAndDeleteTrapezoid(size_t id_to_delete);
     const std::vector<Trapezoid>& getTrapezoids() const;
     size_t getTrapezoidsNumber();
-    inline Trapezoid& trapezoid(size_t id);
-    inline cg3::Segment2d& segment(size_t id);
-    inline cg3::Point2d& point(size_t id);
+    Trapezoid& trapezoid(size_t id);
+    cg3::Segment2d& segment(size_t id);
+    cg3::Point2d& point(size_t id);
+
+    size_t id_tmp;
 
 private:
     std::vector<Trapezoid> trapezoids;
@@ -35,5 +37,22 @@ private:
     std::vector<cg3::Point2d> points;
 
 };
+
+/**
+ * @brief TrapezoidalMap::trapezoid inline: execution should be faster
+ * @param id: an index of a trapezoid
+ * @return the reference for the trapezoid id
+ */
+inline Trapezoid& TrapezoidalMap::trapezoid(size_t id) {
+    return trapezoids[id];
+}
+
+inline cg3::Segment2d& TrapezoidalMap::segment(size_t id) {
+    return segments[id];
+}
+
+inline cg3::Point2d& TrapezoidalMap::point(size_t id) {
+    return points[id];
+}
 
 #endif // TRAPEZOIDALMAP_H
