@@ -19,14 +19,16 @@ public:
     size_t addTrapezoid(Trapezoid trapezoid);
     size_t addSegment(cg3::Segment2d segment);
     size_t addPoint(cg3::Point2d point);
-    void swapAndDeleteTrapezoid(size_t id_to_delete);
+    //void swapAndDeleteTrapezoid(size_t id_to_delete);
+    void deleteTrapezoid(size_t id_to_delete);
     const std::vector<Trapezoid>& getTrapezoids() const;
     size_t getTrapezoidsNumber();
+    Trapezoid* getTrapezoid(size_t id);
     Trapezoid& trapezoid(size_t id);
     cg3::Segment2d& segment(size_t id);
     cg3::Point2d& point(size_t id);
 
-    size_t id_tmp;
+    size_t id_trapezoid_found;
 
 private:
     std::vector<Trapezoid> trapezoids;

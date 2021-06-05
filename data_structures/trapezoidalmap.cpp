@@ -1,6 +1,6 @@
 #include "trapezoidalmap.h"
 
-TrapezoidalMap::TrapezoidalMap() {
+TrapezoidalMap::TrapezoidalMap():id_trapezoid_found(SIZE_MAX) {
 }
 
 /**
@@ -14,6 +14,7 @@ TrapezoidalMap::~TrapezoidalMap() {
  * @brief TrapezoidalMap::clear remove all elements
  */
 void TrapezoidalMap::clear() {
+    id_trapezoid_found=SIZE_MAX;
     trapezoids.clear();
     segments.clear();
     points.clear();
@@ -38,15 +39,26 @@ size_t TrapezoidalMap::addPoint(cg3::Point2d point) {
     return points.size()-1;
 }
 
+Trapezoid* TrapezoidalMap::getTrapezoid(size_t id) {
+    if (id==SIZE_MAX) return nullptr;
+    return &trapezoids[id];
+}
+
 /**
  * @brief TrapezoidalMap::swapAndDeleteTrapezoid delete a trapezoid
  * Swap the trapezoid with last element and then delete the last element, all in costant time.
  * Pay attention: data references to [id_to_delete] should be updated previously,
  * an example of use in Algorithms::oneTrapezoidIntersection
  */
+/*
 void TrapezoidalMap::swapAndDeleteTrapezoid(size_t id_to_delete) {
     trapezoids[id_to_delete]=trapezoids.back(); // O(1)
     trapezoids.pop_back(); // O(1)
+}
+*/
+
+void TrapezoidalMap::deleteTrapezoid(size_t id_to_delete) {
+    trapezoids[id_to_delete].deleteTrapezoid();
 }
 
 /**

@@ -8,7 +8,9 @@ Trapezoid::Trapezoid(cg3::Point2d left_p, cg3::Segment2d top_s, cg3::Point2d rig
     top_left_neighbor(SIZE_MAX),
     top_right_neighbor(SIZE_MAX),
     bottom_right_neighbor(SIZE_MAX),
-    bottom_left_neighbor(SIZE_MAX)
+    bottom_left_neighbor(SIZE_MAX),
+    deleted(false),
+    leaf_node(nullptr)
 {}
 
 void Trapezoid::setNeighbors(size_t top_left, size_t top_right, size_t bottom_right, size_t bottom_left) {
@@ -18,11 +20,11 @@ void Trapezoid::setNeighbors(size_t top_left, size_t top_right, size_t bottom_ri
     bottom_left_neighbor=bottom_left;
 }
 
-/*
-void Trapezoid::setLeafNode(size_t node_id) {
-    leaf_node_id=node_id;
+
+void Trapezoid::setLeafNode(Node* node) {
+    leaf_node=node;
 }
-*/
+
 
 /**
  * @brief Trapezoid::getVertices
@@ -54,27 +56,40 @@ cg3::Segment2d Trapezoid::getBottomSegment() {
     return bottom_segment;
 }
 
-size_t Trapezoid::getTopLeftNeighbor() {
-    return top_left_neighbor;
+size_t Trapezoid::getNeighbor(NeighborType pos) {
+    switch (pos) {
+        case TL: return top_left_neighbor; break;
+        case TR: return top_right_neighbor; break;
+        case BR: return bottom_right_neighbor; break;
+        case BL: return bottom_left_neighbor; break;
+    }
+    return SIZE_MAX;
 }
 
-size_t Trapezoid::getTopRightNeighbor() {
-    return top_right_neighbor;
+void Trapezoid::setNeighbor(NeighborType pos, size_t id_neighbor) {
+    switch (pos) {
+        case TL: top_left_neighbor=id_neighbor; break;
+        case TR: top_right_neighbor=id_neighbor; break;
+        case BR: bottom_right_neighbor=id_neighbor; break;
+        case BL: bottom_left_neighbor=id_neighbor; break;
+    }
 }
 
-size_t Trapezoid::getBottomRightNeighbor() {
-   return bottom_right_neighbor;
+Node* Trapezoid::getLeafNode(){
+    return leaf_node;
 }
 
-size_t Trapezoid::getBottomLeftNeighbor() {
-    return bottom_left_neighbor;
+void Trapezoid::setRightPoint(cg3::Point2d p) {
+    right_point=p;
 }
 
-/*
-size_t Trapezoid::getLeafNode(){
-    return leaf_node_id;
+void Trapezoid::deleteTrapezoid() {
+    deleted=true;
 }
-*/
+
+bool Trapezoid::isDeleted() const {
+    return deleted;
+}
 
 /**
  * @brief rapezoid::getIntersectionYCoord
