@@ -54,7 +54,6 @@ std::vector<Trapezoid*> FollowSegment(TrapezoidalMap& tmap, Dag& dag, cg3::Segme
         } else
             currtrap=tmap.getTrapezoid(currtrap->getNeighbor(Trapezoid::BR));
         traps.push_back(currtrap);
-assert(currtrap!=nullptr);
 tmap.id_trapezoid_found=currtrap->getLeafNode()->getValue();
     }
     return traps;
@@ -63,6 +62,7 @@ tmap.id_trapezoid_found=currtrap->getLeafNode()->getValue();
 /**
  * @brief Algorithms::queryTrapezoidalMap perform the point query
  * @return the pointer of the Leaf that store the trapezoid ID (return->getValue())
+ * and set tmap.id_trapezoid_found for drawableTrapezoidalMap...
  */
 Node* queryTrapezoidalMap(cg3::Point2d point, TrapezoidalMap& tmap, Dag& dag) {
     Node* node=dag.getRootNode();
@@ -160,11 +160,11 @@ void oneTrapezoidIntersection(Trapezoid* intersected, TrapezoidalMap& tmap, Dag&
  * TODO
  */
 void twoOrMoreTrapezoidsIntersection(std::vector<Trapezoid*> traps_intersect, TrapezoidalMap& tmap, Dag& dag, cg3::Segment2d segment) {
-    size_t idbuf;
+    size_t idbuf, newTopMerge, newBotMerge;
 
     if (traps_intersect.size()<2) return; // error, the point is not inside the bounding box, throw "MMM click on the bbox...";
 
-    //=======================[ First trap (leftmost) ]=======================
+    //=======================[ First trap intersected (leftmost) ]=======================
     size_t id_intersected=traps_intersect[0]->getLeafNode()->getValue();
     Trapezoid* intersected=traps_intersect[0]; // tmap.getTrapezoid(id_intersected);
 
@@ -221,26 +221,22 @@ void twoOrMoreTrapezoidsIntersection(std::vector<Trapezoid*> traps_intersect, Tr
     // - intersected->getNeighbor(Trapezoid::TR)->neighbor(TL & BL) and
     // - intersected->getNeighbor(Trapezoid::BR)->neighbor(TL & BL) need to be updated based on mergers
 
-    //=======================[ Internal trapezoids ]=======================
+    //=======================[ Internal trapezoids intersected ]=======================
     for (size_t id=1; id<traps_intersect.size()-1; id++) {
         id_intersected=traps_intersect[id]->getLeafNode()->getValue();
         intersected=traps_intersect[id]; // tmap.getTrapezoid(id_intersected);
 
-        size_t newTopMerge=SIZE_MAX;
-        size_t newBotMerge=SIZE_MAX;
+        newTopMerge=SIZE_MAX;
+        newBotMerge=SIZE_MAX;
 
         // Add 2 new traps, top & bot, top & bot could be merged with previus top & bot traps (topMerge & botMerge)
         // new top trap: (intersected.p1, intersected.topseg, intersected.p2, segment)
-
-        // in any case i need a new segment node, this sub graph replace then leaf node
-        //Node* newYNode=dag.addNode(Node(Node::YNODE,s1N->getValue()));
-
         // new top trap merge with topMerge?
         if ((tmap.trapezoid(topMerge).getTopSegment()==intersected->getTopSegment()) && (tmap.trapezoid(topMerge).getBottomSegment()==segment)) {
             // merge, no new trap in tmap
             tmap.trapezoid(topMerge).setRightPoint(intersected->getRightPoint());
             tmap.trapezoid(topMerge).setNeighbor(Trapezoid::TR,intersected->getNeighbor(Trapezoid::TR));
-            // topMergeNode remains OK
+            // topMergeNode remains OK, contains topMerge
             /*TODO tmap.trapezoid(topMerge).setNeighbor(Trapezoid::BR) */
         } else {
             // no merge, "close" topMerge and add 1 new trap in tmap
@@ -251,44 +247,122 @@ void twoOrMoreTrapezoidsIntersection(std::vector<Trapezoid*> traps_intersect, Tr
             tmap.trapezoid(topMerge).setNeighbor(Trapezoid::TR,SIZE_MAX);
             tmap.trapezoid(topMerge).setNeighbor(Trapezoid::BR,newTopMerge);
 
-            // add 1 leaf
+            // no merge => I need a new leaft to store the new trap
             topMergeNode=dag.addNode(Node(Node::LEAF,newTopMerge));
+            tmap.trapezoid(newTopMerge).setLeafNode(topMergeNode);
             topMerge=newTopMerge; // mah!
         }
+
         // new bot trap merge with botMerge?
         if ((tmap.trapezoid(botMerge).getTopSegment()==segment) && (tmap.trapezoid(botMerge).getBottomSegment()==intersected->getBottomSegment())) {
             // merge, no new trap in tmap
             tmap.trapezoid(botMerge).setRightPoint(intersected->getRightPoint());
             tmap.trapezoid(botMerge).setNeighbor(Trapezoid::BR,intersected->getNeighbor(Trapezoid::BR));
-            // botMergeNode remains OK
+            // botMergeNode remains OK, contains botMerge
             /*TODO tmap.trapezoid(botMerge).setNeighbor(Trapezoid::BR) */
         } else {
             // no merge, "close" botMerge and add 1 new trap in tmap
-            newBotMerge=tmap.addTrapezoid(Trapezoid(intersected->getLeftPoint(), segment, intersected->getRightPoint(), intersected->getTopSegment()));
+            newBotMerge=tmap.addTrapezoid(Trapezoid(intersected->getLeftPoint(), segment, intersected->getRightPoint(), intersected->getBottomSegment()));
             // neighbors of the new top trap
             tmap.trapezoid(newBotMerge).setNeighbors(botMerge, SIZE_MAX/*TODO*/, intersected->getNeighbor(Trapezoid::BR), intersected->getNeighbor(Trapezoid::BL));
             // close old bot merge (set neighbors)
             tmap.trapezoid(botMerge).setNeighbor(Trapezoid::TR,newBotMerge);
             tmap.trapezoid(botMerge).setNeighbor(Trapezoid::BR,SIZE_MAX);
 
-            // add 1 leaf
+            // no merge => I need a new leaft to store the new trap
             botMergeNode=dag.addNode(Node(Node::LEAF,newBotMerge));
+            tmap.trapezoid(newBotMerge).setLeafNode(botMergeNode);
             botMerge=newBotMerge; // mah!
             //**** TODO OKKIO ma restano trapezi o nodi non linkati???? intersected?????
         }
 
-        // link the new subgraph
+        // link the new subgraph, in any case i need a new segment node, this sub graph replace then leaf node
         intersected->getLeafNode()->update(Node::YNODE,s1N->getValue(), topMergeNode, botMergeNode);
 
         // delete the original trapezoid intersected
         tmap.deleteTrapezoid(id_intersected);
     }
 
-    //=======================[ Last trap (rightmost) ]=======================
+    //=======================[ Last trap intersected (rightmost) ]=======================
     id_intersected=traps_intersect.back()->getLeafNode()->getValue();
-    intersected=tmap.getTrapezoid(id_intersected);
+    intersected=traps_intersect.back(); // tmap.getTrapezoid(id_intersected);
 
-    // add the 3 trapezoids in tmap: top bot & right, top & bot could be merged with previus top & bot traps (topMerge & botMerge)
+    newTopMerge=SIZE_MAX;
+    newBotMerge=SIZE_MAX;
+
+    // new top trap merge with topMerge?
+    if ((tmap.trapezoid(topMerge).getTopSegment()==intersected->getTopSegment()) && (tmap.trapezoid(topMerge).getBottomSegment()==segment)) {
+        // merge, no new trap in tmap
+        tmap.trapezoid(topMerge).setRightPoint(segment.p2());
+        tmap.trapezoid(topMerge).setNeighbor(Trapezoid::TR,SIZE_MAX); /*TODO: THE RIGHTMOST TRAP */
+        tmap.trapezoid(topMerge).setNeighbor(Trapezoid::BR,SIZE_MAX);
+        // topMergeNode remains OK, contains topMerge
+    } else {
+        // no merge, "close" topMerge and add 1 new trap in tmap
+        newTopMerge=tmap.addTrapezoid(Trapezoid(intersected->getLeftPoint(), intersected->getTopSegment(), segment.p2(), segment));
+        // neighbors of the new top trap
+        tmap.trapezoid(newTopMerge).setNeighbors(intersected->getNeighbor(Trapezoid::TL), SIZE_MAX/*TODO:THE RIGHTMOST TRAP*/, SIZE_MAX, topMerge);
+        // close old top merge (set neighbors)
+        tmap.trapezoid(topMerge).setNeighbor(Trapezoid::TR,SIZE_MAX);
+        tmap.trapezoid(topMerge).setNeighbor(Trapezoid::BR,newTopMerge);
+
+        // no merge => I need a new leaft to store the new trap
+        topMergeNode=dag.addNode(Node(Node::LEAF,newTopMerge));
+        tmap.trapezoid(newTopMerge).setLeafNode(topMergeNode);
+        topMerge=newTopMerge; // mah!
+    }
+
+    // new bot trap merge with botMerge?
+    if ((tmap.trapezoid(botMerge).getTopSegment()==segment) && (tmap.trapezoid(botMerge).getBottomSegment()==intersected->getBottomSegment())) {
+        // merge, no new trap in tmap
+        tmap.trapezoid(botMerge).setRightPoint(segment.p2());
+        tmap.trapezoid(botMerge).setNeighbor(Trapezoid::TR,SIZE_MAX);
+        tmap.trapezoid(botMerge).setNeighbor(Trapezoid::BR,SIZE_MAX); /*TODO: THE RIGHTMOST TRAP */
+        // botMergeNode remains OK, contains botMerge
+    } else {
+        // no merge, "close" botMerge and add 1 new trap in tmap
+        newBotMerge=tmap.addTrapezoid(Trapezoid(intersected->getLeftPoint(), segment, segment.p2(), intersected->getBottomSegment()));
+        // neighbors of the new top trap
+        tmap.trapezoid(newBotMerge).setNeighbors(botMerge, SIZE_MAX, SIZE_MAX/*TODO:THE RIGHTMOST TRAP*/, intersected->getNeighbor(Trapezoid::BL));
+        // close old bot merge (set neighbors)
+        tmap.trapezoid(botMerge).setNeighbor(Trapezoid::TR,newBotMerge);
+        tmap.trapezoid(botMerge).setNeighbor(Trapezoid::BR,SIZE_MAX);
+
+        // no merge => i need a new leaft to store the new trap
+        botMergeNode=dag.addNode(Node(Node::LEAF,newBotMerge));
+        tmap.trapezoid(newBotMerge).setLeafNode(botMergeNode);
+        botMerge=newBotMerge; // mah!
+        //**** TODO OKKIO ma restano trapezi o nodi non linkati???? intersected?????
+    }
+
+    // the new rightmost trpezoid
+    size_t rightT=tmap.addTrapezoid(Trapezoid(segment.p2(), intersected->getTopSegment(), intersected->getRightPoint(), intersected->getBottomSegment()));
+    // The neighbors
+    tmap.trapezoid(rightT).setNeighbors(topMerge, intersected->getNeighbor(Trapezoid::TR), intersected->getNeighbor(Trapezoid::BR), botMerge);
+    // close left traps
+    tmap.trapezoid(topMerge).setNeighbor(Trapezoid::TR,rightT);
+    tmap.trapezoid(botMerge).setNeighbor(Trapezoid::BR,rightT);
+
+    // Update the neighbors of the trapezoid to the right of id_intersected
+    if (intersected->getNeighbor(Trapezoid::TR)!=SIZE_MAX) {
+        idbuf=intersected->getNeighbor(Trapezoid::TR);
+        if (tmap.trapezoid(idbuf).getNeighbor(Trapezoid::TL)==id_intersected) tmap.trapezoid(idbuf).setNeighbor(Trapezoid::TL,rightT);
+        if (tmap.trapezoid(idbuf).getNeighbor(Trapezoid::BL)==id_intersected) tmap.trapezoid(idbuf).setNeighbor(Trapezoid::BL,rightT);
+    }
+    if (intersected->getNeighbor(Trapezoid::BR)!=SIZE_MAX) {
+        idbuf=intersected->getNeighbor(Trapezoid::BR);
+        if (tmap.trapezoid(idbuf).getNeighbor(Trapezoid::TL)==id_intersected) tmap.trapezoid(idbuf).setNeighbor(Trapezoid::TL,rightT);
+        if (tmap.trapezoid(idbuf).getNeighbor(Trapezoid::BL)==id_intersected) tmap.trapezoid(idbuf).setNeighbor(Trapezoid::BL,rightT);
+    }
+
+    // create and link the new subgraph
+    Node* rightL=dag.addNode(Node(Node::LEAF,rightT));
+    tmap.trapezoid(rightT).setLeafNode(rightL);
+    Node* s2N=dag.addNode(Node(Node::YNODE,s1N->getValue(), topMergeNode, botMergeNode));
+    intersected->getLeafNode()->update(Node::XNODE,tmap.addPoint(segment.p2()), s2N, rightL);
+
+    // delete the original trapezoid intersected
+    tmap.deleteTrapezoid(id_intersected);
 }
 
 }

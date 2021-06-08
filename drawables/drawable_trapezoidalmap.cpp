@@ -12,8 +12,6 @@ void DrawableTrapezoidalMap::draw() const {
         if (!trap.isDeleted()) {
             if (i!=id_trapezoid_found)
                 cg3::opengl::drawQuad2(trap.getVertices(), (cg3::Color(rand()%128,rand()%128,rand()%128)), 1, true);
-                //cg3::opengl::drawLine2(vertices[0], vertices[3], (cg3::Color(0,200,0)), 1);
-                //cg3::opengl::drawLine2(vertices[1], vertices[2], (cg3::Color(0,200,0)), 1);
             else
                 cg3::opengl::drawQuad2(trap.getVertices(), (cg3::Color(64,255,64)), 1, true);
         }
