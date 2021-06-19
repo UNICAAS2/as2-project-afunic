@@ -244,7 +244,7 @@ void TrapezoidalMapManager::queryTrapezoidalMap(const cg3::Point2d& queryPoint)
     //THINK ABOUT YOUR STRUCTURE BEFORE WRITING CODE!
 
 
-    Algorithms::queryTrapezoidalMap(queryPoint, drawableTrapezoidalMap, dag);
+    Algorithms::queryTrapezoidalMap(queryPoint, nullptr, drawableTrapezoidalMap, dag);
 
 
     //#####################################################################
