@@ -9,10 +9,9 @@ namespace Algorithms {
     std::vector<Trapezoid*> FollowSegment(TrapezoidalMap& tmap, Dag& dag, cg3::Segment2d segment);
     Node* queryTrapezoidalMap(cg3::Point2d point, cg3::Point2d* sec_point, TrapezoidalMap& tmap, Dag& dag);
 
-    void setNeighborsOfNewTrapezoids(size_t leftT, size_t topT, size_t rightT, size_t bottomT, Trapezoid* intersected, TrapezoidalMap& tmap, Dag& dag, cg3::Segment2d segment);
-    void oneTrapezoidIntersection(Trapezoid* intersected, TrapezoidalMap& tmap, Dag& dag, cg3::Segment2d segment);
-    void twoOrMoreTrapezoidsIntersection(std::vector<Trapezoid*> intersected, TrapezoidalMap& tmap, Dag& dag, cg3::Segment2d segment);
-
+    // ok the next 5 functions could be moved to an external file like misc.h, util.h etc.
+    double pointDirection(cg3::Point2d p, cg3::Segment2d s);
+    bool isAbove(cg3::Point2d p, cg3::Point2d* sec_point, cg3::Segment2d s);
     bool areEqual(double f1, double f2);
     bool areEqual(cg3::Point2d p1, cg3::Point2d p2);
     bool areEqual(cg3::Segment2d s1, cg3::Segment2d s2);

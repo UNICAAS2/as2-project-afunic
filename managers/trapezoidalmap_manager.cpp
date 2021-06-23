@@ -278,8 +278,8 @@ void TrapezoidalMapManager::clearTrapezoidalMap()
     //Clear here your trapezoidal map data structure.
 
 
-    drawableTrapezoidalMap.clear();
     dag.clear();
+    drawableTrapezoidalMap.clear();
 
 
     //#####################################################################

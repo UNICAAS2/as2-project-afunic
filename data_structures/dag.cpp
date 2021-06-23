@@ -33,13 +33,3 @@ Node* Dag::addNode(Node node, bool isRootNode) {
 Node* Dag::getRootNode() {
     return rootNode;
 }
-
-/**
- * @brief Dag::node inline: execution should be faster
- * @param id: an index of a node
- * @return the reference for the node id
-TOCUT, vector version...
-inline Node& Dag::node(size_t id) {
-    return nodes[id];
-}
- */

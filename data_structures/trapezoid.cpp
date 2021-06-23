@@ -27,7 +27,7 @@ void Trapezoid::setLeafNode(Node* node) {
 
 
 /**
- * @brief Trapezoid::getVertices
+ * @brief Trapezoid::getVertices returns the 4 vertices of the trapezoid, used only to draw the trapezoid
  * @param
  * @return
  */
@@ -92,9 +92,8 @@ bool Trapezoid::isDeleted() const {
 }
 
 /**
- * @brief rapezoid::getIntersectionYCoord
- * @param
- * @return la y dell'intersezione tra la slap (linea verticale) e il segment
+ * @brief rapezoid::getIntersectionYCoord returns the y coord of the intersection between the segment and
+ * the slab x (vertical line)
  */
 double Trapezoid::getIntersectionYCoord(double xSlab, cg3::Segment2d segment) const {
     if (segment.p1().x() != segment.p2().x()) {

@@ -4,12 +4,37 @@
 
 namespace Algorithms {
 
+void VerificaTMAP(TrapezoidalMap& tmap) {
+    for (size_t i=0; i<tmap.getTrapezoidsNumber(); i++)
+        if (!tmap.getTrapezoid(i)->isDeleted()) {
+            size_t idt=tmap.getTrapezoid(i)->getNeighbor(Trapezoid::TL);
+            if (idt!=SIZE_MAX) {
+                assert(!tmap.getTrapezoid(idt)->isDeleted());
+                assert(tmap.getTrapezoid(idt)->getNeighbor(Trapezoid::TR)==i);
+            }
+            idt=tmap.getTrapezoid(i)->getNeighbor(Trapezoid::TR);
+            if (idt!=SIZE_MAX) {
+                assert(!tmap.getTrapezoid(idt)->isDeleted());
+                assert(tmap.getTrapezoid(idt)->getNeighbor(Trapezoid::TL)==i);
+            }
+            idt=tmap.getTrapezoid(i)->getNeighbor(Trapezoid::BR);
+            if (idt!=SIZE_MAX) {
+                assert(!tmap.getTrapezoid(idt)->isDeleted());
+                assert(tmap.getTrapezoid(idt)->getNeighbor(Trapezoid::BL)==i);
+            }
+            idt=tmap.getTrapezoid(i)->getNeighbor(Trapezoid::BL);
+            if (idt!=SIZE_MAX) {
+                assert(!tmap.getTrapezoid(idt)->isDeleted());
+                assert(tmap.getTrapezoid(idt)->getNeighbor(Trapezoid::BR)==i);
+            }
+        }
+}
+
 /**
- * @brief addSegmentToTrapezoidalMap TODO
- *
- * TODO
- *
- * @param TODO
+ * @brief addSegmentToTrapezoidalMap add a segment to the Trapezoidl Map
+ * @param tmap
+ * @param dag
+ * @param segment
  */
 void addSegmentToTrapezoidalMap(TrapezoidalMap& tmap, Dag& dag, cg3::Segment2d segment) {
     // no trapezoids? no panic, add the bounding box...
@@ -35,6 +60,13 @@ void addSegmentToTrapezoidalMap(TrapezoidalMap& tmap, Dag& dag, cg3::Segment2d s
     tmap.id_trapezoid_found=SIZE_MAX;
 }
 
+/**
+ * @brief FollowSegment find all trapezoids intersected by the segment
+ * @param tmap
+ * @param dag
+ * @param segment
+ * @return
+ */
 std::vector<Trapezoid*> FollowSegment(TrapezoidalMap& tmap, Dag& dag, cg3::Segment2d segment) {
     std::vector<Trapezoid*> traps;
     cg3::Point2d sec_point=segment.p2();
@@ -63,38 +95,20 @@ std::vector<Trapezoid*> FollowSegment(TrapezoidalMap& tmap, Dag& dag, cg3::Segme
 
 /**
  * @brief Algorithms::queryTrapezoidalMap perform the point query
- * @return the pointer of the Leaf that store the trapezoid ID (return->getValue())
+ * @return the pointer of the Leaf that stores the trapezoid ID (return->getValue())
  * and set tmap.id_trapezoid_found for drawableTrapezoidalMap.
  *
  * @param sec_point used only when inserting a new segment, used to solve the problem of degenerate points
  * in the simple query phase it is not used (since there is no second point, it is superfluous to solve the ambiguity)
  */
-Node* queryTrapezoidalMap(cg3::Point2d point, cg3::Point2d* sec_point, TrapezoidalMap& tmap, Dag& dag) {
+Node* queryTrapezoidalMap(cg3::Point2d p, cg3::Point2d* sec_point, TrapezoidalMap& tmap, Dag& dag) {
     Node* node=dag.getRootNode();
     while (node->getType()!=Node::LEAF) {
         if (node->getType()==Node::XNODE) { // X node
-            if (point.x()<tmap.point(node->getValue()).x())
-                node=node->getLeftChild();
-            else
-                node=node->getRightChild();
+            node=(p.x()<tmap.point(node->getValue()).x() ? node->getLeftChild() : node->getRightChild());
         } else { // Segment node
             size_t id_seg=node->getValue();
-            // if insertion phase and degenerate point=segment.p1 => I use the second point of the segment to insert
-            if ((sec_point!=nullptr) && areEqual(point, tmap.segment(id_seg).p1())) {
-                double d=(sec_point->x()-tmap.segment(id_seg).p1().x()) * (tmap.segment(id_seg).p2().y()-tmap.segment(id_seg).p1().y()) -
-                        (sec_point->y()-tmap.segment(id_seg).p1().y()) * (tmap.segment(id_seg).p2().x()-tmap.segment(id_seg).p1().x()); // d=(x−x1)(y2−y1)−(y−y1)(x2−x1)
-                if (d>0 || areEqual(d,0))
-                    node=node->getRightChild();
-                else
-                    node=node->getLeftChild();
-            } else { // normal case point<>segment.p1 or without second point
-                double d=(point.x()-tmap.segment(id_seg).p1().x()) * (tmap.segment(id_seg).p2().y()-tmap.segment(id_seg).p1().y()) -
-                        (point.y()-tmap.segment(id_seg).p1().y()) * (tmap.segment(id_seg).p2().x()-tmap.segment(id_seg).p1().x()); // d=(x−x1)(y2−y1)−(y−y1)(x2−x1)
-                if (d>0 || areEqual(d,0))
-                    node=node->getRightChild();
-                else
-                    node=node->getLeftChild();
-            }
+            node=(isAbove(p, sec_point, tmap.segment(id_seg)) ? node->getLeftChild() : node->getRightChild());
         }
     }
     tmap.id_trapezoid_found=node->getValue();
@@ -102,11 +116,30 @@ Node* queryTrapezoidalMap(cg3::Point2d point, cg3::Point2d* sec_point, Trapezoid
 }
 
 /**
- * @brief Algorithms::setNeighborsOfNewTrapezoids set the neighbors of the new trapezoids inserted in TMap, this is used
- * in all cases: not degen, degen, 2, 3 or 4 traps, one method for all. I've used the shrot conditional operator, for
- * the (similar) "if else.." version see Algorithms::updateNeighborsOfNeighbors
+ * @brief Algorithms::oneTrapezoidIntersection used when the segment lies entirely in a trapezoid, all in one,
+ * 1. add new traps
+ * 2. set neighbors, update the neighbors of the neighbors of the trap intersected,
+ * 3. update dag
+ * 4. delete the trapezoid
  */
-void setNeighborsOfNewTrapezoids(size_t leftT, size_t topT, size_t rightT, size_t bottomT, Trapezoid* intersected, TrapezoidalMap& tmap, cg3::Segment2d segment) {
+void oneTrapezoidIntersection(Trapezoid* intersected, TrapezoidalMap& tmap, Dag& dag, cg3::Segment2d segment) {
+    size_t id_intersected=intersected->getLeafNode()->getValue();
+
+    //=================[ Add new trapezoids: 2,3 or 4 ]=================
+    // left trap only if the segment.p1.x > leftP.x of the trap
+    size_t leftT=SIZE_MAX;
+    if (segment.p1().x()>intersected->getLeftPoint().x())
+        leftT=tmap.addTrapezoid(Trapezoid(intersected->getLeftPoint(), intersected->getTopSegment(), segment.p1(), intersected->getBottomSegment()));
+    // top always exists
+    size_t topT=tmap.addTrapezoid(Trapezoid(segment.p1(), intersected->getTopSegment(), segment.p2(), segment));
+    // right trap only if the segment.p2.x < rightP.x of the trap
+    size_t rightT=SIZE_MAX;
+    if (segment.p2().x()<intersected->getRightPoint().x())
+        rightT=tmap.addTrapezoid(Trapezoid(segment.p2(), intersected->getTopSegment(), intersected->getRightPoint(), intersected->getBottomSegment()));
+    // bottom always exists
+    size_t bottomT=tmap.addTrapezoid(Trapezoid(segment.p1(), segment, segment.p2(), intersected->getBottomSegment()));
+
+    //=================[ Set neighbors ]=================
     // if left trap exists
     if (leftT!=SIZE_MAX)
         tmap.trapezoid(leftT).setNeighbors(intersected->getNeighbor(Trapezoid::TL), topT, bottomT, intersected->getNeighbor(Trapezoid::BL));
@@ -123,21 +156,13 @@ void setNeighborsOfNewTrapezoids(size_t leftT, size_t topT, size_t rightT, size_
     tmap.trapezoid(bottomT).setNeighbors(
                 SIZE_MAX,
                 SIZE_MAX,
-                (areEqual(segment.p2().x(),intersected->getRightPoint().x()) && areEqual(segment.p2(),intersected->getTopSegment().p2())) ? SIZE_MAX : (areEqual(segment.p2().x(),intersected->getRightPoint().x()) ? intersected->getNeighbor(Trapezoid::BR) : rightT),
-                (areEqual(segment.p1().x(),intersected->getLeftPoint().x()) && areEqual(segment.p1(),intersected->getTopSegment().p1())) ? SIZE_MAX : (areEqual(segment.p1().x(),intersected->getLeftPoint().x()) ? intersected->getNeighbor(Trapezoid::BL) : leftT));
-}
+                (areEqual(segment.p2().x(),intersected->getRightPoint().x()) && areEqual(segment.p2(),intersected->getBottomSegment().p2())) ? SIZE_MAX : (areEqual(segment.p2().x(),intersected->getRightPoint().x()) ? intersected->getNeighbor(Trapezoid::BR) : rightT),
+                (areEqual(segment.p1().x(),intersected->getLeftPoint().x()) && areEqual(segment.p1(),intersected->getBottomSegment().p1())) ? SIZE_MAX : (areEqual(segment.p1().x(),intersected->getLeftPoint().x()) ? intersected->getNeighbor(Trapezoid::BL) : leftT));
 
-/**
- * @brief Algorithms::updateNeighborsOfNeighbors update the neighbors of the neighbors of the new trapezoids inserted in
- * TMap, this is used in all cases: not degen, degen, 2, 3 or 4 traps, one method for all.
- */
-void updateNeighborsOfNeighbors(size_t leftT, size_t topT, size_t rightT, size_t bottomT, Trapezoid* intersected, TrapezoidalMap& tmap, cg3::Segment2d segment) {
-    size_t id_intersected=intersected->getLeafNode()->getValue();
-    size_t idbuf;
-
+    // //=================[ update the neighbors of the neighbors of the trapzoid intersected ]=================
     // Update the neighbors of the trapezoid to the top left of id_intersected
     if (intersected->getNeighbor(Trapezoid::TL)!=SIZE_MAX) {
-        idbuf=intersected->getNeighbor(Trapezoid::TL);
+        size_t idbuf=intersected->getNeighbor(Trapezoid::TL);
         // if share the same segment, this must be updated with new one (if exixts)
         if (tmap.trapezoid(idbuf).getNeighbor(Trapezoid::TR)==id_intersected) {
             if (leftT!=SIZE_MAX) // if exists this is the correct right neighb.
@@ -151,7 +176,7 @@ void updateNeighborsOfNeighbors(size_t leftT, size_t topT, size_t rightT, size_t
     }
     // Update the neighbors of the trapezoid to the bot left of id_intersected
     if (intersected->getNeighbor(Trapezoid::BL)!=SIZE_MAX) {
-        idbuf=intersected->getNeighbor(Trapezoid::BL);
+        size_t idbuf=intersected->getNeighbor(Trapezoid::BL);
         // if share the same segment, this must be updated with new one (if exixts)
         if (tmap.trapezoid(idbuf).getNeighbor(Trapezoid::BR)==id_intersected) {
             if (leftT!=SIZE_MAX) // if exists this is the correct right neighb.
@@ -165,7 +190,7 @@ void updateNeighborsOfNeighbors(size_t leftT, size_t topT, size_t rightT, size_t
     }
     // Update the neighbors of the trapezoid to the top right of id_intersected
     if (intersected->getNeighbor(Trapezoid::TR)!=SIZE_MAX) {
-        idbuf=intersected->getNeighbor(Trapezoid::TR);
+        size_t idbuf=intersected->getNeighbor(Trapezoid::TR);
         // if share the same segment, this must be updated with new one (if exixts)
         if (tmap.trapezoid(idbuf).getNeighbor(Trapezoid::TL)==id_intersected) {
             if (rightT!=SIZE_MAX) // if exists this is the correct left neighb.
@@ -179,25 +204,21 @@ void updateNeighborsOfNeighbors(size_t leftT, size_t topT, size_t rightT, size_t
     }
     // Update the neighbors of the trapezoid to the bot right of id_intersected
     if (intersected->getNeighbor(Trapezoid::BR)!=SIZE_MAX) {
-        idbuf=intersected->getNeighbor(Trapezoid::BR);
+        size_t idbuf=intersected->getNeighbor(Trapezoid::BR);
         // if share the same segment, this must be updated with new one (if exixts)
         if (tmap.trapezoid(idbuf).getNeighbor(Trapezoid::BL)==id_intersected) {
             if (rightT!=SIZE_MAX) // if exists this is the correct left neighb.
                 tmap.trapezoid(idbuf).setNeighbor(Trapezoid::BL,rightT);
             else
-                if (areEqual(segment.p2().x(),intersected->getRightPoint().x()) && areEqual(segment.p2(),intersected->getTopSegment().p2())) // if triangle => no right neighbor
+                if (areEqual(segment.p2().x(),intersected->getRightPoint().x()) && areEqual(segment.p2(),intersected->getBottomSegment().p2())) // if triangle => no right neighbor
                     tmap.trapezoid(idbuf).setNeighbor(Trapezoid::BL,SIZE_MAX);
                 else
                     tmap.trapezoid(idbuf).setNeighbor(Trapezoid::BL,bottomT); // if no right and no triangle => bot left neighbor is bot trap...
         }
     }
-}
 
-/**
- * @brief Algorithms::updateDag update the dag creating and adding the new subgraph for all cases: not degen,
- * degen, 2, 3 or 4 traps.
- */
-void updateDag(size_t leftT, size_t topT, size_t rightT, size_t bottomT, Trapezoid* intersected, TrapezoidalMap& tmap, Dag& dag, cg3::Segment2d segment) {
+    //=================[ Update the dag ]=================
+    // update the dag, create and link the new subgraph for all cases: not degen 4 traps, degen 2 or 3 traps
     Node* bottomL=dag.addNode(Node(Node::LEAF,bottomT));
     tmap.trapezoid(bottomT).setLeafNode(bottomL);
     Node* topL=dag.addNode(Node(Node::LEAF,topT));
@@ -227,47 +248,17 @@ void updateDag(size_t leftT, size_t topT, size_t rightT, size_t bottomT, Trapezo
                 intersected->getLeafNode()->update(Node::XNODE,tmap.addPoint(segment.p1()),leftL, s1N);
             } else // only top and bot
                 intersected->getLeafNode()->update(Node::YNODE,tmap.addSegment(segment), topL, bottomL);
-}
-
-/**
- * @brief Algorithms::oneTrapezoidIntersection Split a trapezoid in 4
- * the segment lies entirely in a trapezoid
- *
- * @param id_trap id of the trapezoid to split
- * TODO
- */
-void oneTrapezoidIntersection(Trapezoid* intersected, TrapezoidalMap& tmap, Dag& dag, cg3::Segment2d segment) {
-    size_t id_intersected=intersected->getLeafNode()->getValue();
-
-    // left trap only if the segment.p1.x > leftP.x of the trap
-    size_t leftT=SIZE_MAX;
-    if (segment.p1().x()>intersected->getLeftPoint().x())
-        leftT=tmap.addTrapezoid(Trapezoid(intersected->getLeftPoint(), intersected->getTopSegment(), segment.p1(), intersected->getBottomSegment()));
-    // top always exists
-    size_t topT=tmap.addTrapezoid(Trapezoid(segment.p1(), intersected->getTopSegment(), segment.p2(), segment));
-    // right trap only if the segment.p2.x < rightP.x of the trap
-    size_t rightT=SIZE_MAX;
-    if (segment.p2().x()<intersected->getRightPoint().x())
-        rightT=tmap.addTrapezoid(Trapezoid(segment.p2(), intersected->getTopSegment(), intersected->getRightPoint(), intersected->getBottomSegment()));
-    // bottom always exists
-    size_t bottomT=tmap.addTrapezoid(Trapezoid(segment.p1(), segment, segment.p2(), intersected->getBottomSegment()));
-
-    setNeighborsOfNewTrapezoids(leftT, topT, rightT, bottomT, intersected, tmap, segment);
-
-    updateNeighborsOfNeighbors(leftT, topT, rightT, bottomT, intersected, tmap, segment);
-
-    updateDag(leftT, topT, rightT, bottomT, intersected, tmap, dag, segment);
 
     // delete the original trapezoid intersected
     tmap.deleteTrapezoid(id_intersected);
 }
 
 /**
- * @brief Algorithms::twoOrMoreTrapezoidsIntersection Split a trapezoid in 4
- * the segment lies entirely in a trapezoid
- *
- * @param id_trap id of the trapezoid to split
- * TODO
+ * @brief twoOrMoreTrapezoidsIntersection used when a segment intersects 2 or more trapezoids.
+ * @param traps_intersect
+ * @param tmap
+ * @param dag
+ * @param segment
  */
 void twoOrMoreTrapezoidsIntersection(std::vector<Trapezoid*> traps_intersect, TrapezoidalMap& tmap, Dag& dag, cg3::Segment2d segment) {
     size_t idbuf, newTopMerge, newBotMerge;
@@ -278,7 +269,7 @@ void twoOrMoreTrapezoidsIntersection(std::vector<Trapezoid*> traps_intersect, Tr
     Trapezoid* intersected=traps_intersect[0];
     size_t id_intersected=intersected->getLeafNode()->getValue();
 
-    // left trap only if the segment.p1.x > leftP.x of the trap
+    // add the new traps, left trap only if the segment.p1.x > leftP.x of the trap
     size_t leftT=SIZE_MAX;
     if (segment.p1().x()>intersected->getLeftPoint().x())
         leftT=tmap.addTrapezoid(Trapezoid(intersected->getLeftPoint(), intersected->getTopSegment(), segment.p1(), intersected->getBottomSegment()));
@@ -287,50 +278,63 @@ void twoOrMoreTrapezoidsIntersection(std::vector<Trapezoid*> traps_intersect, Tr
     // bottom always exists
     size_t botMerge=tmap.addTrapezoid(Trapezoid(segment.p1(), segment, intersected->getRightPoint(), intersected->getBottomSegment()));
 
-    setNeighborsOfNewTrapezoids(leftT, topMerge, SIZE_MAX, botMerge, intersected, tmap, segment);
-/*
-    tmap.trapezoid(topMerge).setNeighbor(Trapezoid::BR,SIZE_MAX);
-    tmap.trapezoid(botMerge).setNeighbor(Trapezoid::TR,SIZE_MAX);
+    // set the neighbors of the new traps
+    // if left trap exists
+    if (leftT!=SIZE_MAX)
+        tmap.trapezoid(leftT).setNeighbors(intersected->getNeighbor(Trapezoid::TL), topMerge, botMerge, intersected->getNeighbor(Trapezoid::BL));
+    // top trap always exists, but the neighbors depend on the existence of the left trap and if are tringles
+    tmap.trapezoid(topMerge).setNeighbors(
+                (areEqual(segment.p1().x(),intersected->getLeftPoint().x()) && areEqual(segment.p1(),intersected->getTopSegment().p1())) ? SIZE_MAX : (areEqual(segment.p1().x(),intersected->getLeftPoint().x()) ? intersected->getNeighbor(Trapezoid::TL) : leftT),
+                intersected->getNeighbor(Trapezoid::TR),// (areEqual(segment.p2().x(),intersected->getRightPoint().x()) && areEqual(segment.p2(),intersected->getTopSegment().p2())) ? SIZE_MAX : (areEqual(segment.p2().x(),intersected->getRightPoint().x()) ? intersected->getNeighbor(Trapezoid::TR) : rightT),
+                SIZE_MAX,  //4m
+                SIZE_MAX);
+    // bottom trap always exists, but the neighbors depend on the existence of the left and if are tringles
+    tmap.trapezoid(botMerge).setNeighbors(
+                SIZE_MAX,
+                SIZE_MAX, //4m
+                intersected->getNeighbor(Trapezoid::BR), // (areEqual(segment.p2().x(),intersected->getRightPoint().x()) && areEqual(segment.p2(),intersected->getTopSegment().p2())) ? SIZE_MAX : (areEqual(segment.p2().x(),intersected->getRightPoint().x()) ? intersected->getNeighbor(Trapezoid::BR) : rightT),
+                (areEqual(segment.p1().x(),intersected->getLeftPoint().x()) && areEqual(segment.p1(),intersected->getBottomSegment().p1())) ? SIZE_MAX : (areEqual(segment.p1().x(),intersected->getLeftPoint().x()) ? intersected->getNeighbor(Trapezoid::BL) : leftT));
 
-
-    // add the 3 trapezoids in tmap: left top & bottom, top & bottom could be merged with next splitting traps
-    size_t leftT=tmap.addTrapezoid(Trapezoid(intersected->getLeftPoint(), intersected->getTopSegment(), segment.p1(), intersected->getBottomSegment()));
-    size_t topMerge=tmap.addTrapezoid(Trapezoid(segment.p1(), intersected->getTopSegment(), intersected->getRightPoint(), segment));
-    size_t botMerge=tmap.addTrapezoid(Trapezoid(segment.p1(), segment, intersected->getRightPoint(), intersected->getBottomSegment()));
-
-    // The neighbors of the new 3 traps
-    tmap.trapezoid(leftT).setNeighbors(intersected->getNeighbor(Trapezoid::TL), topMerge, botMerge, intersected->getNeighbor(Trapezoid::BL));
-    tmap.trapezoid(topMerge).setNeighbors(leftT, intersected->getNeighbor(Trapezoid::TR), SIZE_MAX TODO, SIZE_MAX);
-    tmap.trapezoid(botMerge).setNeighbors(SIZE_MAX, SIZE_MAX TODO, intersected->getNeighbor(Trapezoid::BR), leftT);
-*/
-
-    updateNeighborsOfNeighbors(leftT, topMerge, SIZE_MAX, botMerge, intersected, tmap, segment);
-/*
-    // Update the right neighbors of the trapezoid to the left of id_intersected, anche e solo se idbuf e leftT hanno lo stesso segmento superiore/inf...
+    // Neighbors of neighbors, update the neighbors of the trapezoid to the top left of id_intersected
     if (intersected->getNeighbor(Trapezoid::TL)!=SIZE_MAX) {
         idbuf=intersected->getNeighbor(Trapezoid::TL);
-        if (tmap.trapezoid(idbuf).getNeighbor(Trapezoid::TR)==id_intersected) tmap.trapezoid(idbuf).setNeighbor(Trapezoid::TR,leftT);
+        // if share the same segment, this must be updated with new one (if exixts)
+        if (tmap.trapezoid(idbuf).getNeighbor(Trapezoid::TR)==id_intersected) {
+            if (leftT!=SIZE_MAX) // if exists this is the correct right neighb.
+                tmap.trapezoid(idbuf).setNeighbor(Trapezoid::TR,leftT);
+            else
+                if (areEqual(segment.p1().x(),intersected->getLeftPoint().x()) && areEqual(segment.p1(),intersected->getTopSegment().p1())) // if triangle => no right neighbor
+                    tmap.trapezoid(idbuf).setNeighbor(Trapezoid::TR,SIZE_MAX);
+                else
+                    tmap.trapezoid(idbuf).setNeighbor(Trapezoid::TR,topMerge); // if no left and no triangle => top right neighbor is top trap...
+        }
     }
+    // Update the neighbors of the trapezoid to the bot left of id_intersected
     if (intersected->getNeighbor(Trapezoid::BL)!=SIZE_MAX) {
         idbuf=intersected->getNeighbor(Trapezoid::BL);
-        if (tmap.trapezoid(idbuf).getNeighbor(Trapezoid::BR)==id_intersected) tmap.trapezoid(idbuf).setNeighbor(Trapezoid::BR,leftT);
+        // if share the same segment, this must be updated with new one (if exixts)
+        if (tmap.trapezoid(idbuf).getNeighbor(Trapezoid::BR)==id_intersected) {
+            if (leftT!=SIZE_MAX) // if exists this is the correct right neighb.
+                tmap.trapezoid(idbuf).setNeighbor(Trapezoid::BR,leftT);
+            else
+                if (areEqual(segment.p1().x(),intersected->getLeftPoint().x()) && areEqual(segment.p1(),intersected->getBottomSegment().p1())) // if triangle => no right neighbor
+                    tmap.trapezoid(idbuf).setNeighbor(Trapezoid::BR,SIZE_MAX);
+                else
+                    tmap.trapezoid(idbuf).setNeighbor(Trapezoid::BR,botMerge); // if no left and no triangle => bot right neighbor is bot trap...
+        }
     }
-    // Update the left neighbors of the trapezoid to the right of id_intersected
+    // Update the neighbors of the trapezoid to the top right of id_intersected
     if (intersected->getNeighbor(Trapezoid::TR)!=SIZE_MAX) {
         idbuf=intersected->getNeighbor(Trapezoid::TR);
         if (tmap.trapezoid(idbuf).getNeighbor(Trapezoid::TL)==id_intersected) tmap.trapezoid(idbuf).setNeighbor(Trapezoid::TL,topMerge);
     }
+    // Update the neighbors of the trapezoid to the bot right of id_intersected
     if (intersected->getNeighbor(Trapezoid::BR)!=SIZE_MAX) {
         idbuf=intersected->getNeighbor(Trapezoid::BR);
         if (tmap.trapezoid(idbuf).getNeighbor(Trapezoid::BL)==id_intersected) tmap.trapezoid(idbuf).setNeighbor(Trapezoid::BL,botMerge);
     }
-*/
-/*
-    updateDag(leftT, topMerge, SIZE_MAX, botMerge, intersected, tmap, dag, segment);
-    Node* topMergeNode=tmap.trapezoid(topMerge).getLeafNode();
-    Node* botMergeNode=tmap.trapezoid(botMerge).getLeafNode();
-*/
 
+    // update the Dag
     Node* botMergeNode=dag.addNode(Node(Node::LEAF,botMerge));
     tmap.trapezoid(botMerge).setLeafNode(botMergeNode);
     Node* topMergeNode=dag.addNode(Node(Node::LEAF,topMerge));
@@ -345,18 +349,6 @@ void twoOrMoreTrapezoidsIntersection(std::vector<Trapezoid*> traps_intersect, Tr
     } else // only top and bot
         intersected->getLeafNode()->update(Node::YNODE,id_segment, topMergeNode, botMergeNode);
 
-/*
-    // the new sub graph: +1 XNodes, +1 YNode, +3 Leafs, bottom to top...
-    Node* botMergeNode=dag.addNode(Node(Node::LEAF,botMerge));
-    tmap.trapezoid(botMerge).setLeafNode(botMergeNode);
-    Node* topMergeNode=dag.addNode(Node(Node::LEAF,topMerge));
-    tmap.trapezoid(topMerge).setLeafNode(topMergeNode);
-    Node* s1N=dag.addNode(Node(Node::YNODE,tmap.addSegment(segment), topMergeNode, botMergeNode));
-    Node* leftL=dag.addNode(Node(Node::LEAF,leftT));
-    tmap.trapezoid(leftT).setLeafNode(leftL);
-    // link the new subgraph
-    intersected->getLeafNode()->update(Node::XNODE,tmap.addPoint(segment.p1()),leftL, s1N);
-*/
     // delete the original trapezoid intersected, will be recycled
     tmap.deleteTrapezoid(id_intersected);
 
@@ -374,23 +366,36 @@ void twoOrMoreTrapezoidsIntersection(std::vector<Trapezoid*> traps_intersect, Tr
         newBotMerge=SIZE_MAX;
 
         // Add 2 new traps, top & bot, top & bot could be merged with previus top & bot traps (topMerge & botMerge)
-        // new top trap: (intersected.p1, intersected.topseg, intersected.p2, segment)
         // new top trap merge with topMerge?
         if (areEqual(tmap.trapezoid(topMerge).getTopSegment(),intersected->getTopSegment()) && areEqual(tmap.trapezoid(topMerge).getBottomSegment(),segment)) {
             // merge, no new trap in tmap
             tmap.trapezoid(topMerge).setRightPoint(intersected->getRightPoint());
             tmap.trapezoid(topMerge).setNeighbor(Trapezoid::TR,intersected->getNeighbor(Trapezoid::TR));
+            // Update the neighbors of the trapezoid to the top right of id_intersected
+            if (intersected->getNeighbor(Trapezoid::TR)!=SIZE_MAX) {
+                idbuf=intersected->getNeighbor(Trapezoid::TR);
+                if (tmap.trapezoid(idbuf).getNeighbor(Trapezoid::TL)==id_intersected) tmap.trapezoid(idbuf).setNeighbor(Trapezoid::TL,topMerge);
+            }
+            // & to the top left
+            if (intersected->getNeighbor(Trapezoid::TL)!=SIZE_MAX) {
+                idbuf=intersected->getNeighbor(Trapezoid::TL);
+                if (tmap.trapezoid(idbuf).getNeighbor(Trapezoid::TR)==id_intersected) tmap.trapezoid(idbuf).setNeighbor(Trapezoid::TR,topMerge);
+            }
             // topMergeNode remains OK, contains topMerge
-            /*TODO tmap.trapezoid(topMerge).setNeighbor(Trapezoid::BR) */
         } else {
             // no merge, "close" topMerge and add 1 new trap in tmap
             newTopMerge=tmap.addTrapezoid(Trapezoid(intersected->getLeftPoint(), intersected->getTopSegment(), intersected->getRightPoint(), segment));
             // neighbors of the new top trap
-            tmap.trapezoid(newTopMerge).setNeighbors(intersected->getNeighbor(Trapezoid::TL), intersected->getNeighbor(Trapezoid::TR), SIZE_MAX/*TODO*/, topMerge);
+            tmap.trapezoid(newTopMerge).setNeighbors(intersected->getNeighbor(Trapezoid::TL), intersected->getNeighbor(Trapezoid::TR), SIZE_MAX/*to be set later*/, topMerge);
             // close old top merge (set neighbors)
-            // tmap.trapezoid(topMerge).setNeighbor(Trapezoid::TR,SIZE_MAX);  // FORSE NOOOO!!!!
             tmap.trapezoid(topMerge).setNeighbor(Trapezoid::BR,newTopMerge);
 
+            // Update the neighbors of the trapezoid to the top right of id_intersected
+            if (intersected->getNeighbor(Trapezoid::TR)!=SIZE_MAX) {
+                idbuf=intersected->getNeighbor(Trapezoid::TR);
+                if (tmap.trapezoid(idbuf).getNeighbor(Trapezoid::TL)==id_intersected) tmap.trapezoid(idbuf).setNeighbor(Trapezoid::TL,newTopMerge);
+            }
+            // & to the top left
             if (intersected->getNeighbor(Trapezoid::TL)!=SIZE_MAX) {
                 idbuf=intersected->getNeighbor(Trapezoid::TL);
                 if (tmap.trapezoid(idbuf).getNeighbor(Trapezoid::TR)==id_intersected) tmap.trapezoid(idbuf).setNeighbor(Trapezoid::TR,newTopMerge);
@@ -399,7 +404,7 @@ void twoOrMoreTrapezoidsIntersection(std::vector<Trapezoid*> traps_intersect, Tr
             // no merge => I need a new leaf to store the new trap
             topMergeNode=dag.addNode(Node(Node::LEAF,newTopMerge));
             tmap.trapezoid(newTopMerge).setLeafNode(topMergeNode);
-            topMerge=newTopMerge; // mah!
+            topMerge=newTopMerge;
         }
 
         // new bot trap merge with botMerge?
@@ -407,17 +412,32 @@ void twoOrMoreTrapezoidsIntersection(std::vector<Trapezoid*> traps_intersect, Tr
             // merge, no new trap in tmap
             tmap.trapezoid(botMerge).setRightPoint(intersected->getRightPoint());
             tmap.trapezoid(botMerge).setNeighbor(Trapezoid::BR,intersected->getNeighbor(Trapezoid::BR));
+            // Update the neighbors of the trapezoid to the bot right of id_intersected
+            if (intersected->getNeighbor(Trapezoid::BR)!=SIZE_MAX) {
+                idbuf=intersected->getNeighbor(Trapezoid::BR);
+                if (tmap.trapezoid(idbuf).getNeighbor(Trapezoid::BL)==id_intersected) tmap.trapezoid(idbuf).setNeighbor(Trapezoid::BL,botMerge);
+            }
+            // & to bot left
+            if (intersected->getNeighbor(Trapezoid::BL)!=SIZE_MAX) {
+                idbuf=intersected->getNeighbor(Trapezoid::BL);
+                if (tmap.trapezoid(idbuf).getNeighbor(Trapezoid::BR)==id_intersected) tmap.trapezoid(idbuf).setNeighbor(Trapezoid::BR,botMerge);
+            }
             // botMergeNode remains OK, contains botMerge
-            /*TODO tmap.trapezoid(botMerge).setNeighbor(Trapezoid::BR) */
         } else {
             // no merge, "close" botMerge and add 1 new trap in tmap
             newBotMerge=tmap.addTrapezoid(Trapezoid(intersected->getLeftPoint(), segment, intersected->getRightPoint(), intersected->getBottomSegment()));
             // neighbors of the new top trap
-            tmap.trapezoid(newBotMerge).setNeighbors(botMerge, SIZE_MAX/*TODO*/, intersected->getNeighbor(Trapezoid::BR), intersected->getNeighbor(Trapezoid::BL));
+            tmap.trapezoid(newBotMerge).setNeighbors(botMerge, SIZE_MAX/*to be set later*/, intersected->getNeighbor(Trapezoid::BR), intersected->getNeighbor(Trapezoid::BL));
+
             // close old bot merge (set neighbors)
             tmap.trapezoid(botMerge).setNeighbor(Trapezoid::TR,newBotMerge);
-            // tmap.trapezoid(botMerge).setNeighbor(Trapezoid::BR,SIZE_MAX); // FORSE NOOOO!!!!
 
+            // Update the neighbors of the trapezoid to the bot right of id_intersected
+            if (intersected->getNeighbor(Trapezoid::BR)!=SIZE_MAX) {
+                idbuf=intersected->getNeighbor(Trapezoid::BR);
+                if (tmap.trapezoid(idbuf).getNeighbor(Trapezoid::BL)==id_intersected) tmap.trapezoid(idbuf).setNeighbor(Trapezoid::BL,newBotMerge);
+            }
+            // & to bot left
             if (intersected->getNeighbor(Trapezoid::BL)!=SIZE_MAX) {
                 idbuf=intersected->getNeighbor(Trapezoid::BL);
                 if (tmap.trapezoid(idbuf).getNeighbor(Trapezoid::BR)==id_intersected) tmap.trapezoid(idbuf).setNeighbor(Trapezoid::BR,newBotMerge);
@@ -426,8 +446,7 @@ void twoOrMoreTrapezoidsIntersection(std::vector<Trapezoid*> traps_intersect, Tr
             // no merge => I need a new leaft to store the new trap
             botMergeNode=dag.addNode(Node(Node::LEAF,newBotMerge));
             tmap.trapezoid(newBotMerge).setLeafNode(botMergeNode);
-            botMerge=newBotMerge; // mah!
-            //**** TODO OKKIO ma restano trapezi o nodi non linkati???? intersected?????
+            botMerge=newBotMerge;
         }
 
         // link the new subgraph, I need a new segment node, this sub graph replace the leaf node
@@ -447,18 +466,17 @@ void twoOrMoreTrapezoidsIntersection(std::vector<Trapezoid*> traps_intersect, Tr
     if (areEqual(tmap.trapezoid(topMerge).getTopSegment(),intersected->getTopSegment()) && areEqual(tmap.trapezoid(topMerge).getBottomSegment(),segment)) {
         // merge, no new trap in tmap
         tmap.trapezoid(topMerge).setRightPoint(segment.p2());
-        tmap.trapezoid(topMerge).setNeighbor(Trapezoid::TR,SIZE_MAX); /*TODO: THE RIGHTMOST TRAP */
+        tmap.trapezoid(topMerge).setNeighbor(Trapezoid::TR,SIZE_MAX); /*to be set later*/
         tmap.trapezoid(topMerge).setNeighbor(Trapezoid::BR,SIZE_MAX);
         // topMergeNode remains OK, contains topMerge
     } else {
         // no merge, "close" topMerge and add 1 new trap in tmap
         newTopMerge=tmap.addTrapezoid(Trapezoid(intersected->getLeftPoint(), intersected->getTopSegment(), segment.p2(), segment));
         // neighbors of the new top trap
-        tmap.trapezoid(newTopMerge).setNeighbors(intersected->getNeighbor(Trapezoid::TL), SIZE_MAX/*TODO:THE RIGHTMOST TRAP*/, SIZE_MAX, topMerge);
+        tmap.trapezoid(newTopMerge).setNeighbors(intersected->getNeighbor(Trapezoid::TL), SIZE_MAX/*to be set later*/, SIZE_MAX, topMerge);
         // close old top merge (set neighbors)
-        // tmap.trapezoid(topMerge).setNeighbor(Trapezoid::TR,SIZE_MAX); // NOOOO!!!
         tmap.trapezoid(topMerge).setNeighbor(Trapezoid::BR,newTopMerge);
-
+        // & update the TL neighbor
         if (intersected->getNeighbor(Trapezoid::TL)!=SIZE_MAX) {
             idbuf=intersected->getNeighbor(Trapezoid::TL);
             if (tmap.trapezoid(idbuf).getNeighbor(Trapezoid::TR)==id_intersected) tmap.trapezoid(idbuf).setNeighbor(Trapezoid::TR,newTopMerge);
@@ -475,17 +493,16 @@ void twoOrMoreTrapezoidsIntersection(std::vector<Trapezoid*> traps_intersect, Tr
         // merge, no new trap in tmap
         tmap.trapezoid(botMerge).setRightPoint(segment.p2());
         tmap.trapezoid(botMerge).setNeighbor(Trapezoid::TR,SIZE_MAX);
-        tmap.trapezoid(botMerge).setNeighbor(Trapezoid::BR,SIZE_MAX); /*TODO: THE RIGHTMOST TRAP */
+        tmap.trapezoid(botMerge).setNeighbor(Trapezoid::BR,SIZE_MAX); /*to be set later*/
         // botMergeNode remains OK, contains botMerge
     } else {
         // no merge, "close" botMerge and add 1 new trap in tmap
         newBotMerge=tmap.addTrapezoid(Trapezoid(intersected->getLeftPoint(), segment, segment.p2(), intersected->getBottomSegment()));
         // neighbors of the new top trap
-        tmap.trapezoid(newBotMerge).setNeighbors(botMerge, SIZE_MAX, SIZE_MAX/*TODO:THE RIGHTMOST TRAP*/, intersected->getNeighbor(Trapezoid::BL));
+        tmap.trapezoid(newBotMerge).setNeighbors(botMerge, SIZE_MAX, SIZE_MAX/*to be set later*/, intersected->getNeighbor(Trapezoid::BL));
         // close old bot merge (set neighbors)
         tmap.trapezoid(botMerge).setNeighbor(Trapezoid::TR,newBotMerge);
-        // tmap.trapezoid(botMerge).setNeighbor(Trapezoid::BR,SIZE_MAX); // NOOOO!!!
-
+        // & update the BL neighbor
         if (intersected->getNeighbor(Trapezoid::BL)!=SIZE_MAX) {
             idbuf=intersected->getNeighbor(Trapezoid::BL);
             if (tmap.trapezoid(idbuf).getNeighbor(Trapezoid::BR)==id_intersected) tmap.trapezoid(idbuf).setNeighbor(Trapezoid::BR,newBotMerge);
@@ -494,8 +511,7 @@ void twoOrMoreTrapezoidsIntersection(std::vector<Trapezoid*> traps_intersect, Tr
         // no merge => i need a new leaft to store the new trap
         botMergeNode=dag.addNode(Node(Node::LEAF,newBotMerge));
         tmap.trapezoid(newBotMerge).setLeafNode(botMergeNode);
-        botMerge=newBotMerge; // mah!
-        //**** TODO OKKIO ma restano trapezi o nodi non linkati???? intersected?????
+        botMerge=newBotMerge;
     }
 
     // the new rightmost trpezoid
@@ -503,43 +519,72 @@ void twoOrMoreTrapezoidsIntersection(std::vector<Trapezoid*> traps_intersect, Tr
     if (segment.p2().x()<intersected->getRightPoint().x())
         rightT=tmap.addTrapezoid(Trapezoid(segment.p2(), intersected->getTopSegment(), intersected->getRightPoint(), intersected->getBottomSegment()));
 
-    // The neighbors
+    // The neighbors, if right trap exists
     if (rightT!=SIZE_MAX)
         tmap.trapezoid(rightT).setNeighbors(topMerge, intersected->getNeighbor(Trapezoid::TR), intersected->getNeighbor(Trapezoid::BR), botMerge);
     // close merge traps
-    tmap.trapezoid(topMerge).setNeighbor(Trapezoid::TR,rightT);
-    tmap.trapezoid(botMerge).setNeighbor(Trapezoid::BR,rightT);
+    tmap.trapezoid(topMerge).setNeighbor(Trapezoid::TR,(areEqual(segment.p2().x(),intersected->getRightPoint().x()) && areEqual(segment.p2(),intersected->getTopSegment().p2())) ? SIZE_MAX : (areEqual(segment.p2().x(),intersected->getRightPoint().x()) ? intersected->getNeighbor(Trapezoid::TR) : rightT));
+    tmap.trapezoid(botMerge).setNeighbor(Trapezoid::BR,(areEqual(segment.p2().x(),intersected->getRightPoint().x()) && areEqual(segment.p2(),intersected->getBottomSegment().p2())) ? SIZE_MAX : (areEqual(segment.p2().x(),intersected->getRightPoint().x()) ? intersected->getNeighbor(Trapezoid::BR) : rightT));
 
-    updateNeighborsOfNeighbors(SIZE_MAX, topMerge, rightT, botMerge, intersected, tmap, segment);
-    /*
-    // Update the neighbors of the trapezoid to the right of id_intersected
+    // Update the neighbors of the trapezoid to the top right of id_intersected
     if (intersected->getNeighbor(Trapezoid::TR)!=SIZE_MAX) {
         idbuf=intersected->getNeighbor(Trapezoid::TR);
-        if (tmap.trapezoid(idbuf).getNeighbor(Trapezoid::TL)==id_intersected) tmap.trapezoid(idbuf).setNeighbor(Trapezoid::TL,rightT);
+        // if share the same segment, this must be updated with new one (if exixts)
+        if (tmap.trapezoid(idbuf).getNeighbor(Trapezoid::TL)==id_intersected) {
+            if (rightT!=SIZE_MAX) // if exists this is the correct left neighb.
+                tmap.trapezoid(idbuf).setNeighbor(Trapezoid::TL,rightT);
+            else
+                if (areEqual(segment.p2().x(),intersected->getRightPoint().x()) && areEqual(segment.p2(),intersected->getTopSegment().p2())) // if triangle => no right neighbor
+                    tmap.trapezoid(idbuf).setNeighbor(Trapezoid::TL,SIZE_MAX);
+                else
+                    tmap.trapezoid(idbuf).setNeighbor(Trapezoid::TL,topMerge); // if no right and no triangle => top left neighbor is top trap...
+        }
     }
+    // Update the neighbors of the trapezoid to the bot right of id_intersected
     if (intersected->getNeighbor(Trapezoid::BR)!=SIZE_MAX) {
         idbuf=intersected->getNeighbor(Trapezoid::BR);
-        if (tmap.trapezoid(idbuf).getNeighbor(Trapezoid::BL)==id_intersected) tmap.trapezoid(idbuf).setNeighbor(Trapezoid::BL,rightT);
+        // if share the same segment, this must be updated with new one (if exixts)
+        if (tmap.trapezoid(idbuf).getNeighbor(Trapezoid::BL)==id_intersected) {
+            if (rightT!=SIZE_MAX) // if exists this is the correct left neighb.
+                tmap.trapezoid(idbuf).setNeighbor(Trapezoid::BL,rightT);
+            else
+                if (areEqual(segment.p2().x(),intersected->getRightPoint().x()) && areEqual(segment.p2(),intersected->getBottomSegment().p2())) // if triangle => no right neighbor
+                    tmap.trapezoid(idbuf).setNeighbor(Trapezoid::BL,SIZE_MAX);
+                else
+                    tmap.trapezoid(idbuf).setNeighbor(Trapezoid::BL,botMerge); // if no right and no triangle => bot left neighbor is bot trap...
+        }
     }
-    */
 
     if (rightT!=SIZE_MAX) { // with right trap
-        // create and link the new subgraph
         Node* rightL=dag.addNode(Node(Node::LEAF,rightT));
         tmap.trapezoid(rightT).setLeafNode(rightL);
         Node* s2N=dag.addNode(Node(Node::YNODE,id_segment, topMergeNode, botMergeNode));
+        // link the new subgraph
         intersected->getLeafNode()->update(Node::XNODE,tmap.addPoint(segment.p2()), s2N, rightL);
-    } else
+    } else // no right trap => YNode for only top & bot leafs
         intersected->getLeafNode()->update(Node::YNODE,id_segment, topMergeNode, botMergeNode);
-    /*
-    // create and link the new subgraph
-    Node* rightL=dag.addNode(Node(Node::LEAF,rightT));
-    tmap.trapezoid(rightT).setLeafNode(rightL);
-    Node* s2N=dag.addNode(Node(Node::YNODE,id_segment, topMergeNode, botMergeNode));
-    intersected->getLeafNode()->update(Node::XNODE,tmap.addPoint(segment.p2()), s2N, rightL);
-    */
+
     // delete the original trapezoid intersected
     tmap.deleteTrapezoid(id_intersected);
+}
+
+/**
+ * @brief pointDirection cross product to check if the point lies to the right or to the left of s
+ * if 0 => point and segment are collinear (same direction), use areEqual to check
+ */
+double pointDirection(cg3::Point2d p, cg3::Segment2d s) {
+    return (p.y()-s.p1().y()) * (s.p2().x()-s.p1().x())-(p.x()-s.p1().x()) * (s.p2().y()-s.p1().y()); // (y−y1)(x2−x1)-(x−x1)(y2−y1)
+}
+
+/**
+ * @brief isAbove return true if the point lies above the segment s, false otherwise
+ * @param sec_point used when the point p is degenerate, used only when inserting a new segment, for the point query it
+ * is not necessary (with only one point is imnpossible to solve the ambiguity).
+ */
+bool isAbove(cg3::Point2d p, cg3::Point2d* sec_point, cg3::Segment2d s) {
+    double d=pointDirection(p,s);
+    if (areEqual(d,0) && (sec_point!=nullptr)) d=pointDirection(*sec_point,s);
+    return d>0;
 }
 
 /**

@@ -7,7 +7,6 @@
 /**
  * @brief The DAG data structure
  *
- * I have replaced (again) the vector with a list.
  */
 class Dag {
 
@@ -18,7 +17,6 @@ public:
 
     Node* addNode(Node node, bool isRootNode=false);
     Node* getRootNode();
-    // inline Node& node(size_t id); TOCUT: vector versioni...
 
 private:
     Node* rootNode;

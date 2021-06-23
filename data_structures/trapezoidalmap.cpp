@@ -44,19 +44,6 @@ Trapezoid* TrapezoidalMap::getTrapezoid(size_t id) {
     return &trapezoids[id];
 }
 
-/**
- * @brief TrapezoidalMap::swapAndDeleteTrapezoid delete a trapezoid
- * Swap the trapezoid with last element and then delete the last element, all in costant time.
- * Pay attention: data references to [id_to_delete] should be updated previously,
- * an example of use in Algorithms::oneTrapezoidIntersection
- */
-/*
-void TrapezoidalMap::swapAndDeleteTrapezoid(size_t id_to_delete) {
-    trapezoids[id_to_delete]=trapezoids.back(); // O(1)
-    trapezoids.pop_back(); // O(1)
-}
-*/
-
 void TrapezoidalMap::deleteTrapezoid(size_t id_to_delete) {
     trapezoids[id_to_delete].deleteTrapezoid();
 }

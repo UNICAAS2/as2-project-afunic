@@ -12,6 +12,13 @@ Node::Node(NodeType node_type, size_t node_value, Node* left_child, Node* right_
     rightChild(right_child)
 {}
 
+/**
+ * @brief Node::update update a node, used to replace leaves with subgraphs
+ * @param node_type
+ * @param node_value
+ * @param left_child
+ * @param right_child
+ */
 void Node::update(NodeType node_type, size_t node_value, Node* left_child, Node* right_child) {
     type=node_type;
     value=node_value;
@@ -28,7 +35,6 @@ void Node::setLeftChild(Node* left_child) {
 
 /**
  * @brief Set the right child
- * @param rc the index of the right child
  */
 void Node::setRightChild(Node* right_child) {
     rightChild=right_child;
@@ -41,7 +47,6 @@ void Node::setChilds(Node* left_child, Node* right_child) {
 
 /**
  * @brief Get the left child
- * @return the index of the left child
  */
 Node* Node::getLeftChild() {
     return leftChild;
@@ -49,7 +54,6 @@ Node* Node::getLeftChild() {
 
 /**
  * @brief Get the right child
- * @return the index of the right child
  */
 Node* Node::getRightChild() {
     return rightChild;

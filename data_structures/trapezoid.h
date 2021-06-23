@@ -7,7 +7,6 @@
 /**
  * @brief Class representing the trapezoid
  *
- * TODO
  */
 class Trapezoid {
 
@@ -43,7 +42,7 @@ private:
 
     bool deleted;
 
-    Node* leaf_node; //punta al nodo foglia del dag
+    Node* leaf_node; //link to the leaf node of the dag
 };
 
 #endif // TRAPEZOID_H

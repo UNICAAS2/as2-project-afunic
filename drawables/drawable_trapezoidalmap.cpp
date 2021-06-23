@@ -1,32 +1,51 @@
 #include "drawable_trapezoidalmap.h"
 #include <cg3/viewer/opengl_objects/opengl_objects2.h>
+#include "algorithms/algorithms.h"
 
-DrawableTrapezoidalMap::DrawableTrapezoidalMap():TrapezoidalMap() {
+DrawableTrapezoidalMap::DrawableTrapezoidalMap():TrapezoidalMap() {}
 
-}
-
+/**
+ * @brief DrawableTrapezoidalMap::draw draw the vertical segments and trapezoids
+ * - vertical segments are red
+ * - the color of the trapezoids simulates random (dark) colors: it depends on the position of the trapezoid
+ *   in the trapezoidal map, it is therefore always drawn with the same color but I don't have to store it
+ *   in the data structure.
+ * - the fired trapezoid (by point query) are light green
+ */
 void DrawableTrapezoidalMap::draw() const {
-    //std::array<cg3::Point2d, 4> vertices;
     size_t i=0;
     for (const Trapezoid& trap : getTrapezoids()) {
         if (!trap.isDeleted()) {
-            if (i!=id_trapezoid_found)
-                cg3::opengl::drawQuad2(trap.getVertices(), (cg3::Color(rand()%128,rand()%128,rand()%128)), 1, true);
-            else
-                cg3::opengl::drawQuad2(trap.getVertices(), (cg3::Color(64,255,64)), 1, true);
+            // vertices
+            std::array<cg3::Point2d, 4> v=trap.getVertices(); // in cwo: TL, TR, BR, BL
+            // fill color
+            cg3::Color fc=(i==id_trapezoid_found ? cg3::Color(64,255,64): cg3::Color((i*40)%128,(i*30)%128,(i*20)%128));
+            if (Algorithms::areEqual(v[0],v[3])) {
+                // TL=BL => left triangle
+                cg3::opengl::drawLine2(v[1], v[2], (cg3::Color(255,0,0)), 1);
+                cg3::opengl::drawTriangle2(v[0], v[1], v[2], fc, 1, true);
+            } else
+                if (Algorithms::areEqual(v[1],v[2])) {
+                    // TR=BR => right triangle
+                    cg3::opengl::drawLine2(v[1], v[2], (cg3::Color(255,0,0)), 1);
+                    cg3::opengl::drawTriangle2(v[0], v[1], v[3], fc, 1, true);
+                } else {
+                    // normal trapezoid
+                    cg3::opengl::drawLine2(v[0], v[3], (cg3::Color(255,0,0)), 1);
+                    cg3::opengl::drawLine2(v[1], v[2], (cg3::Color(255,0,0)), 1);
+                    cg3::opengl::drawQuad2(v, fc, 1, true);
+                }
         }
         i++;
     }
 }
 
-cg3::Point3d DrawableTrapezoidalMap::sceneCenter() const
-{
+cg3::Point3d DrawableTrapezoidalMap::sceneCenter() const {
     // const cg3::BoundingBox2& boundingBox = this->getBoundingBox();
     return cg3::Point3d(0,0,0); // cg3::Point3d(boundingBox.center().x(), boundingBox.center().y(), 0);
 }
 
-double DrawableTrapezoidalMap::sceneRadius() const
-{
+double DrawableTrapezoidalMap::sceneRadius() const {
     // const cg3::BoundingBox2& boundingBox = this->getBoundingBox();
     return 0; // boundingBox.diag();
 }
