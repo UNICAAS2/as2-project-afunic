@@ -58,6 +58,8 @@ void addSegmentToTrapezoidalMap(TrapezoidalMap& tmap, Dag& dag, cg3::Segment2d s
         twoOrMoreTrapezoidsIntersection(intersected, tmap, dag, segment);
     // clear id_trapezoid_found for the point query
     tmap.id_trapezoid_found=SIZE_MAX;
+
+//VerificaTMAP(tmap); // tocut
 }
 
 /**
@@ -79,11 +81,17 @@ std::vector<Trapezoid*> FollowSegment(TrapezoidalMap& tmap, Dag& dag, cg3::Segme
         // quale prendere TRnieg o BRneig?
         if (currtrap->getNeighbor(Trapezoid::TR)!=SIZE_MAX) {
             if (currtrap->getNeighbor(Trapezoid::BR)!=SIZE_MAX) {
-                // può essere uno dei due, valuto in base alla y
-                if (currtrap->getIntersectionYCoord(currtrap->getRightPoint().x(), segment)>currtrap->getRightPoint().y())
-                    currtrap=tmap.getTrapezoid(currtrap->getNeighbor(Trapezoid::TR));
-                else
+                // può essere uno dei due, valuto in base alla posizione di rightP rispetto al segmento
+                /*
+                if (isAbove(currtrap->getRightPoint(),nullptr,segment))
                     currtrap=tmap.getTrapezoid(currtrap->getNeighbor(Trapezoid::BR));
+                else
+                    currtrap=tmap.getTrapezoid(currtrap->getNeighbor(Trapezoid::TR));
+                */
+                if (currtrap->getIntersectionYCoord(currtrap->getRightPoint().x(), segment)<currtrap->getRightPoint().y())
+                    currtrap=tmap.getTrapezoid(currtrap->getNeighbor(Trapezoid::BR));
+                else
+                    currtrap=tmap.getTrapezoid(currtrap->getNeighbor(Trapezoid::TR));
             } else
                 currtrap=tmap.getTrapezoid(currtrap->getNeighbor(Trapezoid::TR));
         } else
@@ -107,8 +115,7 @@ Node* queryTrapezoidalMap(cg3::Point2d p, cg3::Point2d* sec_point, TrapezoidalMa
         if (node->getType()==Node::XNODE) { // X node
             node=(p.x()<tmap.point(node->getValue()).x() ? node->getLeftChild() : node->getRightChild());
         } else { // Segment node
-            size_t id_seg=node->getValue();
-            node=(isAbove(p, sec_point, tmap.segment(id_seg)) ? node->getLeftChild() : node->getRightChild());
+            node=(isAbove(p, sec_point, tmap.segment(node->getValue())) ? node->getLeftChild() : node->getRightChild());
         }
     }
     tmap.id_trapezoid_found=node->getValue();
