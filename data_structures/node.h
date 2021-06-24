@@ -17,9 +17,6 @@ public:
     Node(NodeType node_type, size_t node_value, Node* left_child=nullptr, Node* right_child=nullptr);
 
     void update(NodeType node_type, size_t node_value, Node* left_child, Node* right_child);
-    void setLeftChild(Node* left_child); // non più usata?
-    void setRightChild(Node* right_child); // non più usata?
-    void setChilds(Node* left_child, Node* right_child); // shortcut
     Node* getLeftChild();
     Node* getRightChild();
     NodeType getType();

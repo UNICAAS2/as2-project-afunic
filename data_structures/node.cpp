@@ -27,25 +27,6 @@ void Node::update(NodeType node_type, size_t node_value, Node* left_child, Node*
 }
 
 /**
- * @brief Set the left child
- */
-void Node::setLeftChild(Node* left_child) {
-    leftChild=left_child;
-}
-
-/**
- * @brief Set the right child
- */
-void Node::setRightChild(Node* right_child) {
-    rightChild=right_child;
-}
-
-void Node::setChilds(Node* left_child, Node* right_child) {
-    this->setLeftChild(left_child);
-    this->setRightChild(right_child);
-}
-
-/**
  * @brief Get the left child
  */
 Node* Node::getLeftChild() {

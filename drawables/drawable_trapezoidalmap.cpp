@@ -1,6 +1,7 @@
 #include "drawable_trapezoidalmap.h"
 #include <cg3/viewer/opengl_objects/opengl_objects2.h>
 #include "algorithms/algorithms.h"
+#include "utils/gas_utils.h"
 
 DrawableTrapezoidalMap::DrawableTrapezoidalMap():TrapezoidalMap() {}
 
@@ -20,12 +21,12 @@ void DrawableTrapezoidalMap::draw() const {
             std::array<cg3::Point2d, 4> v=trap.getVertices(); // in cwo: TL, TR, BR, BL
             // fill color
             cg3::Color fc=(i==id_trapezoid_found ? cg3::Color(64,255,64): cg3::Color((i*40)%128,(i*30)%128,(i*20)%128));
-            if (Algorithms::areEqual(v[0],v[3])) {
+            if (GasUtils::areTheSame(v[0],v[3])) {
                 // TL=BL => left triangle
                 cg3::opengl::drawLine2(v[1], v[2], (cg3::Color(255,0,0)), 1);
                 cg3::opengl::drawTriangle2(v[0], v[1], v[2], fc, 1, true);
             } else
-                if (Algorithms::areEqual(v[1],v[2])) {
+                if (GasUtils::areTheSame(v[1],v[2])) {
                     // TR=BR => right triangle
                     cg3::opengl::drawLine2(v[1], v[2], (cg3::Color(255,0,0)), 1);
                     cg3::opengl::drawTriangle2(v[0], v[1], v[3], fc, 1, true);

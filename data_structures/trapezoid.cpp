@@ -1,4 +1,5 @@
 #include "trapezoid.h"
+#include "utils/gas_utils.h"
 
 Trapezoid::Trapezoid(cg3::Point2d left_p, cg3::Segment2d top_s, cg3::Point2d right_p, cg3::Segment2d bottom_s):
     left_point(left_p),
@@ -33,10 +34,10 @@ void Trapezoid::setLeafNode(Node* node) {
  */
 const std::array<cg3::Point2d, 4> Trapezoid::getVertices() const {
     std::array<cg3::Point2d, 4> vertices;
-    vertices[0].set(left_point.x(),getIntersectionYCoord(left_point.x(), top_segment));      // top left
-    vertices[1].set(right_point.x(),getIntersectionYCoord(right_point.x(), top_segment));    // top right
-    vertices[2].set(right_point.x(),getIntersectionYCoord(right_point.x(), bottom_segment)); // bottom right
-    vertices[3].set(left_point.x(),getIntersectionYCoord(left_point.x(), bottom_segment));   // bottom left
+    vertices[0].set(left_point.x(),GasUtils::getIntersectionYCoord(left_point.x(), top_segment));      // top left
+    vertices[1].set(right_point.x(),GasUtils::getIntersectionYCoord(right_point.x(), top_segment));    // top right
+    vertices[2].set(right_point.x(),GasUtils::getIntersectionYCoord(right_point.x(), bottom_segment)); // bottom right
+    vertices[3].set(left_point.x(),GasUtils::getIntersectionYCoord(left_point.x(), bottom_segment));   // bottom left
     return vertices;
 };
 
@@ -89,16 +90,4 @@ void Trapezoid::deleteTrapezoid() {
 
 bool Trapezoid::isDeleted() const {
     return deleted;
-}
-
-/**
- * @brief rapezoid::getIntersectionYCoord returns the y coord of the intersection between the segment and
- * the slab x (vertical line)
- */
-double Trapezoid::getIntersectionYCoord(double xSlab, cg3::Segment2d segment) const {
-    if (segment.p1().x() != segment.p2().x()) {
-        double pdz = (segment.p2().y() - segment.p1().y()) / (segment.p2().x() - segment.p1().x());
-        return (pdz*(xSlab - segment.p1().x()) + segment.p1().y());
-    } else
-        return segment.p1().y();
 }

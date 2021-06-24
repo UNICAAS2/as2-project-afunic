@@ -44,6 +44,11 @@ Trapezoid* TrapezoidalMap::getTrapezoid(size_t id) {
     return &trapezoids[id];
 }
 
+/*
+Trapezoid TrapezoidalMap::getOneTrapezoid(size_t id) {
+    return trapezoids[id];
+}*/
+
 void TrapezoidalMap::deleteTrapezoid(size_t id_to_delete) {
     trapezoids[id_to_delete].deleteTrapezoid();
 }

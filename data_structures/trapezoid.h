@@ -24,7 +24,6 @@ public:
     Node* getLeafNode();
     size_t getNeighbor(NeighborType pos);
     void setNeighbor(NeighborType pos, size_t id_neighbor);
-    double getIntersectionYCoord(double xSlab, cg3::Segment2d segment) const;
     void setRightPoint(cg3::Point2d p);
     void deleteTrapezoid();
     bool isDeleted() const;// used only in drawableTrapezoidalMap::draw()
