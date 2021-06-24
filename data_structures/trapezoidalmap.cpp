@@ -29,6 +29,15 @@ size_t TrapezoidalMap::addTrapezoid(Trapezoid trapezoid) {
     return trapezoids.size()-1;
 }
 
+/**
+ * @brief TrapezoidalMap::setTrapezoid used to avoid deletions, in the incremental step the
+ * insertion ops are always greater than the deletion ops.
+ */
+size_t TrapezoidalMap::setTrapezoid(size_t pos, Trapezoid trapezoid) {
+    trapezoids[pos]=trapezoid;
+    return pos;
+}
+
 size_t TrapezoidalMap::addSegment(cg3::Segment2d segment) {
     segments.push_back(segment);
     return segments.size()-1;
@@ -42,15 +51,6 @@ size_t TrapezoidalMap::addPoint(cg3::Point2d point) {
 Trapezoid* TrapezoidalMap::getTrapezoid(size_t id) {
     if (id==SIZE_MAX) return nullptr;
     return &trapezoids[id];
-}
-
-/*
-Trapezoid TrapezoidalMap::getOneTrapezoid(size_t id) {
-    return trapezoids[id];
-}*/
-
-void TrapezoidalMap::deleteTrapezoid(size_t id_to_delete) {
-    trapezoids[id_to_delete].deleteTrapezoid();
 }
 
 /**

@@ -16,9 +16,9 @@ public:
     void clear();
 
     size_t addTrapezoid(Trapezoid trapezoid);
+    size_t setTrapezoid(size_t pos, Trapezoid trapezoid);
     size_t addSegment(cg3::Segment2d segment);
     size_t addPoint(cg3::Point2d point);
-    void deleteTrapezoid(size_t id_to_delete);
     const std::vector<Trapezoid>& getTrapezoids() const;
     size_t getTrapezoidsNumber();
     Trapezoid* getTrapezoid(size_t id);
