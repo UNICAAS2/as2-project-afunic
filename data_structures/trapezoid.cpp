@@ -10,7 +10,6 @@ Trapezoid::Trapezoid(cg3::Point2d left_p, cg3::Segment2d top_s, cg3::Point2d rig
     top_right_neighbor(SIZE_MAX),
     bottom_right_neighbor(SIZE_MAX),
     bottom_left_neighbor(SIZE_MAX),
-    deleted(false),
     leaf_node(nullptr)
 {}
 
@@ -82,12 +81,4 @@ Node* Trapezoid::getLeafNode(){
 
 void Trapezoid::setRightPoint(cg3::Point2d p) {
     right_point=p;
-}
-
-void Trapezoid::deleteTrapezoid() {
-    deleted=true;
-}
-
-bool Trapezoid::isDeleted() const {
-    return deleted;
 }

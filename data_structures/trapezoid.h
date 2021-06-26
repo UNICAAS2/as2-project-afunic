@@ -26,7 +26,6 @@ public:
     void setNeighbor(NeighborType pos, size_t id_neighbor);
     void setRightPoint(cg3::Point2d p);
     void deleteTrapezoid();
-    bool isDeleted() const;// used only in drawableTrapezoidalMap::draw()
 
 private:
     cg3::Point2d left_point;
@@ -38,8 +37,6 @@ private:
     size_t top_right_neighbor;
     size_t bottom_right_neighbor;
     size_t bottom_left_neighbor;
-
-    bool deleted;
 
     Node* leaf_node; //link to the leaf node of the dag
 };

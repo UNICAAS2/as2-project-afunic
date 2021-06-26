@@ -20,17 +20,18 @@ void addSegmentToTrapezoidalMap(TrapezoidalMap& tmap, Dag& dag, cg3::Segment2d s
         tmap.trapezoid(id_bb).setLeafNode(dag.addNode(Node(Node::LEAF, id_bb), true)); // set new node as root node
     }
     // is p1 the left endpoint of the segment? If no swap endpoints
+    cg3::Segment2d directed_seg=segment;
     if (segment.p1().x()>segment.p2().x()) {
-        cg3::Point2d buf = segment.p2();
-        segment.setP2(segment.p1());
-        segment.setP1(buf);
+        directed_seg.setP1(segment.p2());
+        directed_seg.setP2(segment.p1());
     }
+
     // trapezoids intersecting the segment
-    std::vector<size_t> intersected=FollowSegment(tmap, dag, segment);
+    std::vector<size_t> intersected=FollowSegment(tmap, dag, directed_seg);
     if (intersected.size()==1)
-        oneTrapezoidIntersection(intersected[0], tmap, dag, segment);
+        oneTrapezoidIntersection(intersected[0], tmap, dag, directed_seg);
     else
-        twoOrMoreTrapezoidsIntersection(intersected, tmap, dag, segment);
+        twoOrMoreTrapezoidsIntersection(intersected, tmap, dag, directed_seg);
     // clear id_trapezoid_found for the point query
     tmap.id_trapezoid_found=SIZE_MAX;
 }
